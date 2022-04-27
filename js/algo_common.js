@@ -44,12 +44,12 @@ function load_simu() {
     currframe = -1;
     frames = [];
     frames = create_frames($('#variants').val());
-    step()
+    render_frame()
 };
 
 function start_simu() {
     running = true;
-    $('#runButton').removeClass('btn-primary').removeClass('btn-success').addClass('btn-info');
+    $('#runButton').removeClass('btn-primary btn-success').addClass('btn-warning');
     if (!timer) {
         timer = setTimeout(step_routine, interval)
     }
@@ -57,7 +57,7 @@ function start_simu() {
 
 function stop_simu() {
     running = false;
-    $('#runButton').removeClass('btn-info').removeClass('btn-success').addClass('btn-primary');
+    $('#runButton').removeClass('btn-warning btn-success').addClass('btn-primary');
     if (timer) {
         clearTimeout(timer);
         timer = 0
@@ -76,7 +76,7 @@ function step() {
     }
     else {
         stop_simu()
-        $('#runButton').removeClass('btn-info').removeClass('btn-primary').addClass('btn-success');
+        $('#runButton').removeClass('btn-warning btn-primary').addClass('btn-success');
     }
 }
 

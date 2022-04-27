@@ -1,8 +1,12 @@
 let min = 4
-let max = 20;
+let max = 30;
 let size = 8;
 let target = 4;
 let variants = ["Linear search", "Binary search"];
+let vispanel = document.getElementById('vis-panel');
+let active = [];
+let bars = [];
+const bar_template = "<div class=\"shadow w-100 mx-auto mt-auto bg-info text-center rounded\" style=\"height:~h~%\;min-height:25px\">~val~</div>";
 
 //controls
 for (var i = 0; i < variants.length; i++) { //fill variants
@@ -71,9 +75,25 @@ function create_frames(variant) {
 }
 
 function render_frame(frame) {
-    let vispanel = document.getElementById('vis-panel');
-    vispanel.innerHTML = '';
-    vispanel.innerHTML += '<p>Size: '+size+'</p>'+'<p>Target: '+target+'</p>';
-    vispanel.innerHTML += '<p>Active: '+frame.active+'</p>'+'<p>Complete: '+frame.complete+'</p>';
-    //TODO
+    tindex=target-1
+    if (frame){
+        active.forEach(function(bar){bars[bar-1].classList.remove('bg-danger','bg-warning');bars[bar-1].classList.add('bg-info');});
+        bars[tindex].classList.remove('bg-info');
+        bars[tindex].classList.add('bg-danger');
+        frame.active.forEach(function(bar){bars[bar-1].classList.remove('bg-danger','bg-info');bars[bar-1].classList.add('bg-warning');});
+        if (frame.complete){
+            bars[tindex].classList.remove('bg-danger','bg-warning');
+            bars[tindex].classList.add('bg-success');
+        };
+        active=frame.active;
+    }
+    else{
+        vispanel.innerHTML = '';
+        for (var i = 0; i < size; i++){
+            vispanel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, i+1).replace(/~h~/g,(i+1)/size*100))
+        };
+        bars = vispanel.children;
+        bars[tindex].classList.remove('bg-info');
+        bars[tindex].classList.add('bg-danger');
+    }
 }
