@@ -35,12 +35,13 @@
     </script>
     <script src="/js/algos.js"></script>
     <script>
+        const algo = new URLSearchParams(window.location.search).get("algo");
         $.ajax({
             url: "/common/algo_common.html",
             success: function (data) {
                 $('#row-main').html(data);
                 $.ajax({
-                    url: "/js/search.js",
+                    url: "/js/"+algo+".js",
                     success: function (data) {
                         $.getScript("/js/algo_common.js");
                     }
