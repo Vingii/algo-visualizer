@@ -1,6 +1,6 @@
-var names = ["Searching"];
-var descs = ["Algorithms for finding an element of an ordered list given its value."];
-var links = ["search"];
+var names = ["Searching", "Sorting"];
+var descs = ["Algorithms for finding an element of an ordered list given its value.", "Algorithms for sorting a list by the value."];
+var links = ["search","sort"];
 
 function makeCards() {
 	for (var i = 0; i < names.length; i++) {

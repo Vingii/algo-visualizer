@@ -40,10 +40,10 @@ function click_restart() {
 for (var i = 0; i < variants.length; i++) {
     document.getElementById('variants').insertAdjacentHTML('beforeend', '<option value="' + i + '">' + variants[i] + '</option>');
 };
-variant=$('#variants').val();
+variant = $('#variants').val();
 
-$('#variants').on('change', function change_variant(e){
-    variant=$('#variants').val();
+$('#variants').on('change', function change_variant(e) {
+    variant = $('#variants').val();
     load_simu();
 });
 
@@ -55,7 +55,7 @@ function load_simu() {
     currframe = -1;
     frames = [];
     frames = create_frames($('#variants').val());
-    render_frame();
+    render_frame(variant);
 };
 
 function start_simu() {
@@ -83,7 +83,7 @@ function step_routine() {
 function step() {
     if (currframe < frames.length - 1) {
         currframe += 1;
-        render_frame(frames[currframe]);
+        render_frame(variant, frames[currframe]);
     }
     else {
         stop_simu();
@@ -100,9 +100,10 @@ function change_desc() {
     document.getElementById('desc').insertAdjacentHTML('beforeend', "<b>Algorithm:</b> " + descriptions[variant]);
     $('#specs').empty();
     for (const [key, value] of Object.entries(specs[variant])) {
-        document.getElementById('specs').insertAdjacentHTML('beforeend', "<b>"+key+":</b> " + value+"<br>");
-      }
+        document.getElementById('specs').insertAdjacentHTML('beforeend', "<b>" + key + ":</b> " + value + "<br>");
+    }
 };
 
-$('#desc-common').empty();
-document.getElementById('desc-common').insertAdjacentHTML('beforeend', "<b>Task:</b> " + desc_common);
+$('#name-common').empty();
+document.getElementById('name-common').insertAdjacentHTML('beforeend', "<b>" + name_common + "</b>");
+document.getElementById('desc-common').insertAdjacentHTML('beforeend', "<b>Task: </b>" + desc_common);

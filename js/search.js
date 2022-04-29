@@ -4,13 +4,14 @@ let size = 8;
 let target = 4;
 let active = [];
 let bars = [];
-const vispanel = document.getElementById('vis-panel');
+const vis_panel = document.getElementById('vis-panel');
 const bar_template = "<div class=\"shadow w-100 mx-auto bg-info text-center rounded\" style=\"height:~h~%\;min-height:25px\">~val~</div>";
 
+const name_common = "Searching"
 const desc_common = "Given an ordered list, find an element of a given value."
 const variants = ["Linear search", "Binary search"];
 const descriptions = ["Checks every element in order against the target.", "Checks the middle element against the target. Halves the search space in each step."];
-const specs = [{"Average time":"O(n)","Worst time":"O(n)","Space":"O(1)"},{"Average time":"O(log(n))","Worst time":"O(log(n))","Space":"O(1)"}]
+const specs = [{ "Average time": "O(n)", "Worst time": "O(n)", "Space": "O(1)" }, { "Average time": "O(log(n))", "Worst time": "O(log(n))", "Space": "O(1)" }]
 
 //controls
 
@@ -74,7 +75,7 @@ function create_frames(variant) {
     return frames;
 }
 
-function render_frame(frame) {
+function render_frame(variant, frame) {
     tindex = target - 1;
     if (frame) {
         active.forEach(function (bar) { bars[bar - 1].classList.remove('bg-danger', 'bg-warning'); bars[bar - 1].classList.add('bg-info'); });
@@ -90,11 +91,11 @@ function render_frame(frame) {
         active = frame.active;
     }
     else {
-        vispanel.innerHTML = '';
+        vis_panel.innerHTML = '';
         for (var i = 0; i < size; i++) {
-            vispanel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, i + 1).replace(/~h~/g, (i + 1) / size * 95));
+            vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, i + 1).replace(/~h~/g, (i + 1) / size * 95));
         };
-        bars = vispanel.children;
+        bars = vis_panel.children;
         bars[tindex].classList.remove('bg-info');
         bars[tindex].classList.add('bg-danger');
     };
