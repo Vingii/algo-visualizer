@@ -63,25 +63,41 @@ function create_frames(variant) {
     init_values = [...values];
     switch (variant) {
         case "0": //select
-            for (var i = 0; i < size-1; i++) {
+            for (var i = 0; i < size - 1; i++) {
                 const sorted = Array.from(Array(i).keys());
                 let min = i;
                 frames.push(new Frame(values, [min], sorted));
-                for (var j = i+1; j < size; j++) {
+                for (var j = i + 1; j < size; j++) {
                     frames.push(new Frame(values, [min, j], sorted));
                     if (values[min] > values[j]) {
                         min = j;
                         frames.push(new Frame(values, [min], sorted));
                     };
                 };
-                frames.push(new Frame(values, [min,i], sorted));
+                frames.push(new Frame(values, [min, i], sorted));
                 [values[min], values[i]] = [values[i], values[min]];
-                frames.push(new Frame(values, [min,i], sorted));
+                frames.push(new Frame(values, [min, i], sorted));
             };
-            frames.push(new Frame(values, [size-1], Array.from(Array(size-1).keys())));
+            frames.push(new Frame(values, [size - 1], Array.from(Array(size - 1).keys())));
             frames.push(new Frame(values, [], values));
             break;
         case "1": //insert
+            for (var i = 0; i < size; i++) {
+                const sorted = Array.from(Array(i+1).keys());
+                let pos = i;
+                let val = values[i];
+                frames.push(new Frame(values, [pos], sorted));
+                while (pos > 0 && values[pos] < values[pos - 1]) {
+                    frames.push(new Frame(values, [pos, pos - 1], sorted));
+                    [values[pos], values[pos - 1]] = [values[pos - 1], values[pos]];
+                    frames.push(new Frame(values, [pos, pos - 1], sorted));
+                    pos -= 1;
+                };
+                if (pos>0){
+                    frames.push(new Frame(values, [pos, pos - 1], sorted));
+                }
+            };
+            frames.push(new Frame(values, [], values));
             break;
         case "2": //heap
             break;
@@ -109,8 +125,8 @@ function render_frame(variant, frame) {
                 };
                 bars = vis_panel.children;
                 active.forEach(function (bar) { bars[bar].classList.remove('bg-warning'); bars[bar].classList.add('bg-info'); });
-                frame.active.forEach(function (bar) { bars[bar].classList.remove('bg-info'); bars[bar].classList.add('bg-warning'); });
                 frame.sorted.forEach(function (bar) { bars[bar].classList.remove('bg-info', 'bg-warning'); bars[bar].classList.add('bg-success'); });
+                frame.active.forEach(function (bar) { bars[bar].classList.remove('bg-info', 'bg-success'); bars[bar].classList.add('bg-warning'); });
                 active = frame.active;
             }
             else {
