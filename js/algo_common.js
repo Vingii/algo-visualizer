@@ -40,6 +40,7 @@ function click_restart() {
 for (var i = 0; i < variants.length; i++) {
     document.getElementById('variants').insertAdjacentHTML('beforeend', '<option value="' + i + '">' + variants[i] + '</option>');
 };
+
 variant = $('#variants').val();
 
 $('#variants').on('change', function change_variant(e) {
@@ -76,8 +77,8 @@ function stop_simu() {
 }
 
 function step_routine() {
-    step();
     timer = setTimeout(step_routine, interval);
+    step();
 }
 
 function step() {

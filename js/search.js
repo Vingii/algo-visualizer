@@ -2,7 +2,7 @@ const min = 4;
 const max = 30;
 let size = 8;
 let target = 4;
-let active = [];
+let active = new Set();
 let bars = [];
 const vis_panel = document.getElementById('vis-panel');
 const bar_template = "<div class=\"shadow w-100 mx-auto bg-info text-center rounded\" style=\"height:~h~%\;min-height:25px\">~val~</div>";
@@ -38,7 +38,7 @@ function change_target(e) {
 //simulation
 class Frame {
     constructor(active, complete) {
-        this.active = [...active];
+        this.active = new Set(active);
         this.complete = complete;
     };
 };
@@ -88,7 +88,7 @@ function render_frame(variant, frame) {
         else {
             frame.active.forEach(function (bar) { bars[bar - 1].classList.remove('bg-danger', 'bg-info'); bars[bar - 1].classList.add('bg-warning'); });
         };
-        active = frame.active;
+        active = new Set(frame.active);
     }
     else {
         vis_panel.innerHTML = '';
