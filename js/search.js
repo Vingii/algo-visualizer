@@ -4,7 +4,6 @@ let size = 8;
 let target = 4;
 let active = new Set();
 let bars = [];
-const vis_panel = document.getElementById('vis-panel');
 const bar_template = "<div class=\"shadow w-100 mx-auto bg-info text-center rounded\" style=\"height:~h~%\;min-height:25px\">~val~</div>";
 
 const name_common = "Searching"

@@ -22,14 +22,15 @@
     <noscript>
         <p>JavaScript is not enabled.</p>
     </noscript>
-    <div class="container-fluid min-vh-100 d-flex flex-column">
-        <div class="row" id="nav">
+    <div class="container-fluid vh-100 d-flex flex-column">
+        <div class="row flex-shrink-0" id="nav">
         </div>
         <div class="row flex-grow-1" id="row-main">
             <div class="col-md-2 bg-light" id="control-panel">
                 <label for="speedRange" class="form-label mt-1">Speed</label>
                 <input type="range" class="form-range" min="1" max="10" step="1" value="3" id="speedRange">
-                <button type="button" class="btn btn-primary mb-1" onclick="click_run()" id="runButton">Run/Pause</button>
+                <button type="button" class="btn btn-primary mb-1" onclick="click_run()"
+                    id="runButton">Run/Pause</button>
                 <button type="button" class="btn btn-primary mb-1" onclick="click_step()">Step</button>
                 <button type="button" class="btn btn-primary mb-1" onclick="click_restart()">Restart</button>
                 <hr>
@@ -38,42 +39,52 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-8 d-flex flex-row" id="vis-panel">
-                Visualization
+            <div class="row col-md-8 flex-grow-1 flex-column position-static" style="min-height: 50vh;">
+                <div class="h-25" id="vis-top" hidden>
+                    Visualization
+                </div>
+                <div class="d-flex flex-row flex-grow-1" id="vis-panel">
+                    Visualization
+                </div>
+                <div class="h-25" id="vis-bot" hidden>
+                    Visualization
+                </div>
             </div>
-            <div class="col-md-2 bg-light fs-4" id="desc-panel">
-                <p class="text-center" id="name-common">
-                    Description
-                </p>
-                <p id="desc-common">
-                </p>
-                <hr>
-                <p id="desc">
-                </p>
-                <hr>
-                <p id="specs">
-                </p>
+            <div class="col-md-2 bg-light fs-4 position-relative5" id="desc-panel"
+                style="overflow-y: scroll;min-height: 50vh;">
+                <div class='position-absolute'>
+                    <p class="text-center" id="name-common">
+                        Description
+                    </p>
+                    <p id="desc-common">
+                    </p>
+                    <hr>
+                    <p id="desc">
+                    </p>
+                    <hr>
+                    <p id="specs">
+                    </p>
+                </div>
             </div>
         </div>
-    </div>
-    <script>
-        $(function () {
-            $("#nav").load("/common/navbar.html");
-        });
-    </script>
-    <script src="/js/algo_list.js"></script>
-    <script>
-        const algo = new URLSearchParams(window.location.search).get("algo");
-        $.ajax({
-                    url: "/js/"+algo+".js",
-                    success: function (data) {
-                        $.getScript("/js/algo_common.js");
-                    },
-                    error: function (data) {
-                        window.location.replace("/")
-                    }
-                });
-    </script>
+        <script>
+            $(function () {
+                $("#nav").load("/common/navbar.html");
+            });
+        </script>
+        <script src="/js/algo_list.js"></script>
+        <script>
+            const algo = new URLSearchParams(window.location.search).get("algo");
+            $.ajax({
+                url: "/js/" + algo + ".js",
+                success: function (data) {
+                    $.getScript("/js/algo_common.js");
+                },
+                error: function (data) {
+                    window.location.replace("/")
+                }
+            });
+        </script>
 </body>
 
 </html>

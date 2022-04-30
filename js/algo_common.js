@@ -6,6 +6,9 @@ var currframe = -1;
 var timer = 0;
 var interval = 1000;
 var variant = 0;
+const vis_top = document.getElementById('vis-top');
+const vis_panel = document.getElementById('vis-panel');
+const vis_bot = document.getElementById('vis-bot');
 
 //controls
 
@@ -49,6 +52,22 @@ $('#variants').on('change', function change_variant(e) {
 });
 
 //simulation
+
+function show_top(){
+    vis_top.removeAttribute("hidden");
+};
+
+function hide_top(){
+    vis_top.setAttribute("hidden","");
+};
+
+function show_bot(){
+    vis_bot.removeAttribute("hidden");
+};
+
+function hide_bot(){
+    vis_bot.setAttribute("hidden","");
+};
 
 function load_simu() {
     stop_simu();

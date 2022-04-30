@@ -2,10 +2,8 @@ const min = 4;
 const max = 30;
 let size = 8;
 let active = new Set();
-let bars = [];
 let init_values = [];
 let detailed = false;
-const vis_panel = document.getElementById('vis-panel');
 const bar_template = "<div class=\"shadow w-100 mx-auto bg-info text-center rounded\" style=\"height:~h~%\;min-height:25px\">~val~</div>";
 
 const name_common = "Sorting"
@@ -59,10 +57,11 @@ function change_size(e) {
 
 //simulation
 class Frame {
-    constructor(values, active, sorted, complete) {
+    constructor(values, active, sorted, additional) {
         this.values = [...values];
         this.active = new Set(active);
         this.sorted = new Set(sorted);
+        if (additional) this.additional = [...additional];
     };
 };
 
@@ -139,9 +138,9 @@ function create_frames(variant) {
                         selected = left + 1;
                     };
                     if (selected != root) {
-                        if (detailed) frames.push(new Frame(values, [root,selected], s_sorted));
+                        if (detailed) frames.push(new Frame(values, [root, selected], s_sorted));
                         [values[root], values[selected]] = [values[selected], values[root]];
-                        if (detailed) frames.push(new Frame(values, [root,selected], s_sorted));
+                        if (detailed) frames.push(new Frame(values, [root, selected], s_sorted));
                         root = selected;
                     }
                     else {
@@ -152,6 +151,7 @@ function create_frames(variant) {
 
             heapify();
             for (var i = size - 1; i > 0; i--) {
+                if (detailed) frames.push(new Frame(values, [0, i], s_sorted));
                 [values[i], values[0]] = [values[0], values[i]];
                 s_sorted.add(i);
                 frames.push(new Frame(values, [], s_sorted));
@@ -222,16 +222,12 @@ function create_frames(variant) {
 function render_frame(variant, frame) {
     switch (variant) {
         case "3": //merge
-            break;
-        case "5": //radix
-            break;
-        default: //select, insert, heap, quick (~inplace)
-            vis_panel.innerHTML = '';
+            show_bot();
             if (frame) {
                 for (var i = 0; i < size; i++) {
                     vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, frame.values[i] + 1).replace(/~h~/g, (frame.values[i] + 1) / size * 95));
                 };
-                bars = vis_panel.children;
+                let bars = vis_panel.children;
                 active.forEach(function (bar) { bars[bar].classList.remove('bg-warning'); bars[bar].classList.add('bg-info'); });
                 frame.sorted.forEach(function (bar) { bars[bar].classList.remove('bg-info', 'bg-warning'); bars[bar].classList.add('bg-success'); });
                 frame.active.forEach(function (bar) { bars[bar].classList.remove('bg-info', 'bg-success'); bars[bar].classList.add('bg-warning'); });
@@ -241,7 +237,28 @@ function render_frame(variant, frame) {
                 for (var i = 0; i < size; i++) {
                     vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, init_values[i] + 1).replace(/~h~/g, (init_values[i] + 1) / size * 95));
                 };
-                bars = vis_panel.children;
+            };
+            break;
+        case "5": //radix
+            show_bot();
+            break;
+        default: //select, insert, heap, quick (~inplace)
+            hide_bot();
+            vis_panel.innerHTML = '';
+            if (frame) {
+                for (var i = 0; i < size; i++) {
+                    vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, frame.values[i] + 1).replace(/~h~/g, (frame.values[i] + 1) / size * 95));
+                };
+                let bars = vis_panel.children;
+                active.forEach(function (bar) { bars[bar].classList.remove('bg-warning'); bars[bar].classList.add('bg-info'); });
+                frame.sorted.forEach(function (bar) { bars[bar].classList.remove('bg-info', 'bg-warning'); bars[bar].classList.add('bg-success'); });
+                frame.active.forEach(function (bar) { bars[bar].classList.remove('bg-info', 'bg-success'); bars[bar].classList.add('bg-warning'); });
+                active = new Set(frame.active);
+            }
+            else {
+                for (var i = 0; i < size; i++) {
+                    vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, init_values[i] + 1).replace(/~h~/g, (init_values[i] + 1) / size * 95));
+                };
             };
             break;
     }
