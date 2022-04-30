@@ -45,7 +45,6 @@ class Frame {
         this.values = [...values];
         this.active = [...active];
         this.sorted = [...sorted];
-        this.complete = complete;
     };
 };
 
@@ -64,20 +63,23 @@ function create_frames(variant) {
     init_values = [...values];
     switch (variant) {
         case "0": //select
-            for (var i = 0; i < size; i++) {
+            for (var i = 0; i < size-1; i++) {
+                const sorted = Array.from(Array(i).keys());
                 let min = i;
-                frames.push(new Frame(values, [min], Array.from(Array(i).keys()), false));
+                frames.push(new Frame(values, [min], sorted));
                 for (var j = i+1; j < size; j++) {
-                    frames.push(new Frame(values, [min, j], Array.from(Array(i).keys()), false));
+                    frames.push(new Frame(values, [min, j], sorted));
                     if (values[min] > values[j]) {
                         min = j;
-                        frames.push(new Frame(values, [min], Array.from(Array(i).keys()), false));
+                        frames.push(new Frame(values, [min], sorted));
                     };
                 };
-                frames.push(new Frame(values, [min,i], Array.from(Array(i).keys()), false));
+                frames.push(new Frame(values, [min,i], sorted));
                 [values[min], values[i]] = [values[i], values[min]];
-                frames.push(new Frame(values, [min,i], Array.from(Array(i).keys()), false));
+                frames.push(new Frame(values, [min,i], sorted));
             };
+            frames.push(new Frame(values, [size-1], Array.from(Array(size-1).keys())));
+            frames.push(new Frame(values, [], values));
             break;
         case "1": //insert
             break;

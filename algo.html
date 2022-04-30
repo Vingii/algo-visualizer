@@ -68,6 +68,9 @@
                     url: "/js/"+algo+".js",
                     success: function (data) {
                         $.getScript("/js/algo_common.js");
+                    },
+                    error: function (data) {
+                        window.location.replace("/")
                     }
                 });
     </script>
