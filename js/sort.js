@@ -3,7 +3,7 @@ const max = 30;
 let size = 8;
 let active = [];
 let bars = [];
-let values = [];
+let init_values = [];
 const vis_panel = document.getElementById('vis-panel');
 const bar_template = "<div class=\"shadow w-100 mx-auto bg-info text-center rounded\" style=\"height:~h~%\;min-height:25px\">~val~</div>";
 
@@ -42,9 +42,9 @@ function change_size(e) {
 //simulation
 class Frame {
     constructor(values, active, sorted, complete) {
-        this.values = values;
-        this.active = active;
-        this.sorted = sorted;
+        this.values = [...values];
+        this.active = [...active];
+        this.sorted = [...sorted];
         this.complete = complete;
     };
 };
@@ -60,10 +60,24 @@ function create_frames(variant) {
     };
 
     let frames = [];
-    values = random_perm(size);
-    frames.push(new Frame(values, [], [], false));
+    let values = random_perm(size);
+    init_values = [...values];
     switch (variant) {
         case "0": //select
+            for (var i = 0; i < size; i++) {
+                let min = i;
+                frames.push(new Frame(values, [min], Array.from(Array(i).keys()), false));
+                for (var j = i+1; j < size; j++) {
+                    frames.push(new Frame(values, [min, j], Array.from(Array(i).keys()), false));
+                    if (values[min] > values[j]) {
+                        min = j;
+                        frames.push(new Frame(values, [min], Array.from(Array(i).keys()), false));
+                    };
+                };
+                frames.push(new Frame(values, [min,i], Array.from(Array(i).keys()), false));
+                [values[min], values[i]] = [values[i], values[min]];
+                frames.push(new Frame(values, [min,i], Array.from(Array(i).keys()), false));
+            };
             break;
         case "1": //insert
             break;
@@ -89,17 +103,17 @@ function render_frame(variant, frame) {
             vis_panel.innerHTML = '';
             if (frame) {
                 for (var i = 0; i < size; i++) {
-                    vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, frame.values[i] + 1).replace(/~h~/g, (values[i] + 1) / size * 95));
+                    vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, frame.values[i] + 1).replace(/~h~/g, (frame.values[i] + 1) / size * 95));
                 };
                 bars = vis_panel.children;
-                active.forEach(function (bar) { bars[bar - 1].classList.remove('bg-warning'); bars[bar - 1].classList.add('bg-info'); });
-                frame.active.forEach(function (bar) { bars[bar - 1].classList.remove('bg-info'); bars[bar - 1].classList.add('bg-warning'); });
-                frame.sorted.forEach(function (bar) { bars[bar - 1].classList.remove('bg-info', 'bg-warning'); bars[bar - 1].classList.add('bg-success'); });
+                active.forEach(function (bar) { bars[bar].classList.remove('bg-warning'); bars[bar].classList.add('bg-info'); });
+                frame.active.forEach(function (bar) { bars[bar].classList.remove('bg-info'); bars[bar].classList.add('bg-warning'); });
+                frame.sorted.forEach(function (bar) { bars[bar].classList.remove('bg-info', 'bg-warning'); bars[bar].classList.add('bg-success'); });
                 active = frame.active;
             }
             else {
                 for (var i = 0; i < size; i++) {
-                    vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, values[i] + 1).replace(/~h~/g, (values[i] + 1) / size * 95));
+                    vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, init_values[i] + 1).replace(/~h~/g, (init_values[i] + 1) / size * 95));
                 };
                 bars = vis_panel.children;
             };

@@ -38,7 +38,7 @@ function change_target(e) {
 //simulation
 class Frame {
     constructor(active, complete) {
-        this.active = active;
+        this.active = [...active];
         this.complete = complete;
     };
 };
