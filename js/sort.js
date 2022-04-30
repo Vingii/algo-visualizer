@@ -3,7 +3,7 @@ const max = 30;
 let size = 8;
 let active = new Set();
 let bars = [];
-let init_values = [];    
+let init_values = [];
 let detailed = false;
 const vis_panel = document.getElementById('vis-panel');
 const bar_template = "<div class=\"shadow w-100 mx-auto bg-info text-center rounded\" style=\"height:~h~%\;min-height:25px\">~val~</div>";
@@ -14,7 +14,7 @@ const variants = ["Select sort", "Insert sort", "Heap sort", "Merge sort", "Quic
 const descriptions = [
     "Keeps ordered and unordered part. In each step, finds the least element of the unordered part.",
     "Keeps ordered and unordered part. In each step, finds a spot for the first element of the unordered part.",
-    "Constructs a heap from the list and repeatedly extracts the least element.",
+    "Constructs a heap from the list and repeatedly extracts the greatest element.",
     "Keeps ordered parts of progressively increasing length. In each step, merges 2 ordered parts of length k into an ordered list of length 2k.",
     "Recursively in each step, chooses a random element and divides the remaining list into a list of smaller and a list of bigger values.",
     "Counts the appearences of each value, then creates this many elements of this value."
@@ -35,7 +35,7 @@ document.getElementById('vis-parameters').insertAdjacentHTML('beforeend', //fill
     '<div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" id="detailedCheck" disabled><label class="form-check-label" for="detailedCheck">Detailed</label></div>');
 
 $('#vis-parameters').on('change', '#variants', function detailed(e) { //quick sort detailed
-    if ($('#variants').val() == 4) {
+    if ($('#variants').val() == 4 || $('#variants').val() == 2) {
         $('#detailedCheck').prop('disabled', false);
     }
     else {
@@ -78,6 +78,8 @@ function create_frames(variant) {
 
     let frames = [];
     let values = random_perm(size);
+    let s_sorted = new Set();
+    let s_active = new Set();
     active = [];
     init_values = [...values];
     switch (variant) {
@@ -119,6 +121,43 @@ function create_frames(variant) {
             frames.push(new Frame(values, [], values));
             break;
         case "2": //heap
+            function heapify() {
+                for (var i = size - 1; i >= 0; i--) {
+                    sift(i, size - 1);
+                };
+            };
+
+            function sift(from, to) {
+                var root = from;
+                while (2 * root <= to) {
+                    var left = 2 * root;
+                    var selected = root;
+                    if (values[selected] < values[left]) {
+                        selected = left;
+                    };
+                    if (left + 1 <= to && values[selected] < values[left + 1]) {
+                        selected = left + 1;
+                    };
+                    if (selected != root) {
+                        if (detailed) frames.push(new Frame(values, [root,selected], s_sorted));
+                        [values[root], values[selected]] = [values[selected], values[root]];
+                        if (detailed) frames.push(new Frame(values, [root,selected], s_sorted));
+                        root = selected;
+                    }
+                    else {
+                        return;
+                    };
+                };
+            };
+
+            heapify();
+            for (var i = size - 1; i > 0; i--) {
+                [values[i], values[0]] = [values[0], values[i]];
+                s_sorted.add(i);
+                frames.push(new Frame(values, [], s_sorted));
+                sift(0, i - 1);
+            }
+            frames.push(new Frame(values, [], values));
             break;
         case "3": //merge
             break;
@@ -127,30 +166,30 @@ function create_frames(variant) {
                 function partition(from, to) {
                     let val = values[to];
                     let pos = from;
-                    q_active.add(to);
+                    s_active.add(to);
                     for (i = from; i < to; i++) {
-                        q_active.add(i);
-                        if (detailed) frames.push(new Frame(values, q_active, q_sorted));
+                        s_active.add(i);
+                        if (detailed) frames.push(new Frame(values, s_active, s_sorted));
                         if (values[i] <= val) {
                             if (pos != i) {
                                 [values[pos], values[i]] = [values[i], values[pos]];
-                                if (detailed) frames.push(new Frame(values, q_active, q_sorted));
+                                if (detailed) frames.push(new Frame(values, s_active, s_sorted));
                             };
-                            q_active.delete(pos);
+                            s_active.delete(pos);
                             pos += 1;
-                            q_active.add(pos);
+                            s_active.add(pos);
                         };
                         if (pos != i) {
-                            q_active.delete(i);
+                            s_active.delete(i);
                         };
                     };
-                    if (detailed) frames.push(new Frame(values, q_active, q_sorted));
+                    if (detailed) frames.push(new Frame(values, s_active, s_sorted));
                     if (pos != to) {
                         [values[pos], values[to]] = [values[to], values[pos]];
-                        if (detailed) frames.push(new Frame(values, q_active, q_sorted));
+                        if (detailed) frames.push(new Frame(values, s_active, s_sorted));
                     }
-                    q_active.delete(to);
-                    q_active.delete(pos);
+                    s_active.delete(to);
+                    s_active.delete(pos);
                     return pos;
                 };
 
@@ -158,21 +197,20 @@ function create_frames(variant) {
                     return;
                 };
                 if (from == to) {
-                    q_active.add(from);
-                    if (detailed) frames.push(new Frame(values, q_active, q_sorted));
-                    q_active.delete(from);
-                    q_sorted.add(from);
-                    frames.push(new Frame(values, q_active, q_sorted));
+                    s_active.add(from);
+                    if (detailed) frames.push(new Frame(values, s_active, s_sorted));
+                    s_active.delete(from);
+                    s_sorted.add(from);
+                    frames.push(new Frame(values, s_active, s_sorted));
                     return;
                 };
                 let mid = partition(from, to);
-                q_sorted.add(mid);
-                frames.push(new Frame(values, q_active, q_sorted));
+                s_sorted.add(mid);
+                frames.push(new Frame(values, s_active, s_sorted));
                 quick(from, mid - 1);
                 quick(mid + 1, to);
             };
-            let q_sorted = new Set();
-            let q_active = new Set();
+
             quick(0, size - 1);
             break;
         case "5": //radix
