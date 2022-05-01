@@ -33,7 +33,7 @@ document.getElementById('vis-parameters').insertAdjacentHTML('beforeend', //fill
     '<div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" id="detailedCheck" disabled><label class="form-check-label" for="detailedCheck">Detailed</label></div>');
 
 $('#vis-parameters').on('change', '#variants', function detailed(e) { //quick sort detailed
-    if ($('#variants').val() == 4 || $('#variants').val() == 2) {
+    if (['2', '3', '4'].includes($('#variants').val())) {
         $('#detailedCheck').prop('disabled', false);
     }
     else {
@@ -160,6 +160,51 @@ function create_frames(variant) {
             frames.push(new Frame(values, [], values));
             break;
         case "3": //merge
+            function merge(from, range) {
+                let additional = [];
+                var i = from;
+                var j = from + range;
+                s_active = new Set(Array.from({ length: Math.min(2 * range, size - from) }, (_, j) => j + i));
+                frames.push(new Frame(values, s_active, []));
+                while (j < from + 2 * range && j < size) {
+                    if (i < from + range && values[i] < values[j]) {
+                        additional.push(values[i]);
+                        if (detailed) frames.push(new Frame(values, [i, j], [], additional));
+                        i += 1;
+                    }
+                    else {
+                        additional.push(values[j]);
+                        if (detailed) {
+                            if (i < from + range) {
+                                frames.push(new Frame(values, [i, j], [], additional));
+                            }
+                            else {
+                                frames.push(new Frame(values, [j], [], additional));
+                            }
+                        };
+                        j += 1;
+                    };
+                };
+                while (i < from + range && i < size) {
+                    additional.push(values[i]);
+                    if (detailed) frames.push(new Frame(values, [i], [], additional));
+                    i += 1;
+                };
+                m = 0;
+                frames.push(new Frame(values, s_active, [], additional));
+                for (var k = from; k < size && k < from + 2 * range; k++) {
+                    values[k] = additional[m];
+                    m += 1;
+                };
+                frames.push(new Frame(values, s_active, []));
+            };
+
+            for (var w = 1; w < size; w = w * 2) {
+                for (var i = 0; i < size; i += w * 2) {
+                    merge(i, w);
+                };
+            };
+            frames.push(new Frame(values, [], values));
             break;
         case "4": //quick
             function quick(from, to) {
@@ -222,10 +267,17 @@ function create_frames(variant) {
 function render_frame(variant, frame) {
     switch (variant) {
         case "3": //merge
-            show_bot();
+            if (detailed) show_bot();
+            vis_panel.innerHTML = '';
+            vis_bot.innerHTML = '';
             if (frame) {
                 for (var i = 0; i < size; i++) {
                     vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, frame.values[i] + 1).replace(/~h~/g, (frame.values[i] + 1) / size * 95));
+                };
+                if (frame.additional) {
+                    for (var i = 0; i < frame.additional.length; i++) {
+                        vis_bot.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, frame.additional[i] + 1).replace(/~h~/g, (frame.additional[i] + 1) / size * 95));
+                    };
                 };
                 let bars = vis_panel.children;
                 active.forEach(function (bar) { bars[bar].classList.remove('bg-warning'); bars[bar].classList.add('bg-info'); });
