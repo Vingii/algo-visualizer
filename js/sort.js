@@ -76,7 +76,11 @@ function create_frames(variant) {
     };
 
     let frames = [];
-    let values = random_perm(size);
+    let values = [];
+    values = random_perm(size);
+    if (variant == 5) {
+        values = values.map(x => Math.floor(x / 2));
+    };
     let s_sorted = new Set();
     let s_active = new Set();
     active = [];
@@ -259,6 +263,23 @@ function create_frames(variant) {
             quick(0, size - 1);
             break;
         case "5": //radix
+            let additional = new Array(Math.ceil(size / 2)).fill(0);
+            for (let i = 0; i < size; i++) {
+                frames.push(new Frame(values, [i], [], additional));
+                additional[values[i]] += 1;
+                frames.push(new Frame(values, [i], [], additional));
+            }
+            let pos = 0;
+            for (let i = 0; i < size; i++) {
+                frames.push(new Frame(values, [i], [], additional));
+                while (additional[pos] == 0) {
+                    pos += 1;
+                }
+                additional[pos] -= 1;
+                values[i] = pos;
+                frames.push(new Frame(values, [i], [], additional));
+            }
+            frames.push(new Frame(values, [], Array(size).keys(), additional));
             break;
     }
     return frames;
@@ -293,6 +314,31 @@ function render_frame(variant, frame) {
             break;
         case "5": //radix
             show_bot();
+            vis_panel.innerHTML = '';
+            vis_bot.innerHTML = '';
+            if (frame) {
+                for (var i = 0; i < size; i++) {
+                    vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, frame.values[i] + 1).replace(/~h~/g, (2 * frame.values[i] + 1) / size * 95));
+                };
+                if (frame.additional) {
+                    for (var i = 0; i < frame.additional.length; i++) {
+                        vis_bot.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, i + 1).replace(/~h~/g, frame.additional[i] / 2 * 95));
+                    };
+                };
+                let bars = vis_panel.children;
+                active.forEach(function (bar) { bars[bar].classList.remove('bg-warning'); bars[bar].classList.add('bg-info'); });
+                frame.sorted.forEach(function (bar) { bars[bar].classList.remove('bg-info', 'bg-warning'); bars[bar].classList.add('bg-success'); });
+                frame.active.forEach(function (bar) { bars[bar].classList.remove('bg-info', 'bg-success'); bars[bar].classList.add('bg-warning'); });
+                active = new Set(frame.active);
+            }
+            else {
+                for (var i = 0; i < size; i++) {
+                    vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, init_values[i] + 1).replace(/~h~/g, (2 * init_values[i] + 1) / size * 95));
+                };
+                for (var i = 0; i < size / 2; i++) {
+                    vis_bot.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, i + 1).replace(/~h~/g, 0));
+                };
+            };
             break;
         default: //select, insert, heap, quick (~inplace)
             hide_bot();
