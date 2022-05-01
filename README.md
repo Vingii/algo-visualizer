@@ -4,6 +4,6 @@
  Bootstrap based visualizer for typical algorithms.
  Available on [GitHub Pages](https://vingii.github.io/algo-visualizer).
  
- Features
+## Features
  - Searching algorithms
  - Sorting algorithms
