@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Algorithm Visualizer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.js"
+        integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"
+        integrity="sha256-6XMVI0zB8cRzfZjqKcD01PBsAy3FlDASrlC8SxCpInY=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"
+        integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <noscript>
+        <p>JavaScript is not enabled.</p>
+    </noscript>
+    <div class="container-fluid vh-100 d-flex flex-column">
+        <div class="row flex-shrink-0" id="nav">
+        </div>
+        <div class="row flex-grow-1" id="row-main">
+            <div class="col-md-2 bg-light" id="control-panel">
+                <label for="speedRange" class="form-label mt-1">Speed</label>
+                <input type="range" class="form-range" min="1" max="10" step="1" value="3" id="speedRange">
+                <button type="button" class="btn btn-primary mb-1" onclick="click_run()"
+                    id="runButton">Run/Pause</button>
+                <button type="button" class="btn btn-primary mb-1" onclick="click_step()">Step</button>
+                <button type="button" class="btn btn-primary mb-1" onclick="click_restart()">Restart</button>
+                <hr>
+                <div id="vis-parameters">
+                    <select class="form-select" id="variants"></select>
+                    </select>
+                </div>
+            </div>
+            <div class="row col-md-8 flex-grow-1 flex-column position-static" style="min-height: 50vh;">
+                <div class="flex-row h-25" id="vis-top" hidden>
+                    Visualization
+                </div>
+                <div class="d-flex flex-row flex-grow-1" id="vis-panel">
+                    Visualization
+                </div>
+                <div class="flex-row" style="min-height: 25%; display:flex;" id="vis-bot" hidden>
+                    Visualization
+                </div>
+            </div>
+            <div class="col-md-2 bg-light fs-4 position-relative5" id="desc-panel"
+                style="overflow-y: scroll;min-height: 50vh;">
+                <div class='position-absolute'>
+                    <p class="text-center" id="name-common">
+                        Description
+                    </p>
+                    <p id="desc-common">
+                    </p>
+                    <hr>
+                    <p id="desc">
+                    </p>
+                    <hr>
+                    <p id="specs">
+                    </p>
+                </div>
+            </div>
+        </div>
+        <script>
+            $(function () {
+                $("#nav").load("/common/navbar.html");
+            });
+        </script>
+        <script src="/js/algo_list.js"></script>
+        <script>
+            const algo = new URLSearchParams(window.location.search).get("algo");
+            $.ajax({
+                url: "/js/" + algo + ".js",
+                success: function (data) {
+                    $.getScript("/js/algo_common.js");
+                },
+                error: function (data) {
+                    window.location.replace("/")
+                }
+            });
+        </script>
+</body>
+
+</html>
