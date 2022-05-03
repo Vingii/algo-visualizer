@@ -1,11 +1,13 @@
 let active = new Set();
 let g = new Graph(false);
 let go = new Graph(true);
+let source = 0;
+let sink = 0;
 
 const name_common = "Graphs";
 const variants = ["Disjoint set union", "Kruskal", "Dijkstra",
     "Ford-Fulkerson", "Topological sort", "Floyd-Warshall", "Blossom"];
-const task = ["Count the number of connected components.", "Find a minimum spanning tree.", "Find a shortest path between two vertices.",
+const task = ["Count the number of connected components.", "Find a minimum spanning tree (forest).", "Find a shortest path between two vertices.",
     "Calculate a maximum flow.", "Decide if a graph is a forest.", "Calculate the minimal distance between every pair of vertices.", "Find a maximum matching."];
 const descriptions = [
     "Consider each vertex a disjoint set, then perform a disjoint-set union for each edge.",
@@ -74,8 +76,8 @@ class Graph {
         return nei;
     }
     neighbours_ordered(u) {
-        return this.neighbours(u).sort(function(a,b){
-            this.adj[u,a]-this.adj[u,b];
+        return this.neighbours(u).sort(function (a, b) {
+            this.adj[u, a] - this.adj[u, b];
         });
     }
     edges() {
@@ -101,19 +103,20 @@ class Graph {
         return edg;
     }
     edges_ordered() {
-        return this.edges().sort(function(a,b){
-            this.adj[a[0],a[1]]-this.adj[b[0],b[1]];
+        return this.edges().sort(function (a, b) {
+            this.adj[a[0], a[1]] - this.adj[b[0], b[1]];
         });
     }
 }
 
 class Frame {
-    constructor(v_active, v_complete, e_active, e_complete, v_values, e_failed) {
+    constructor(v_active, v_complete, e_active, e_complete, v_values, v_failed, e_failed) {
         this.v_active = new Set(v_active);
         this.v_complete = new Set(v_complete);
         this.e_active = [...e_active];
         this.e_complete = [...e_complete];
         if (v_values) this.v_values = [...v_values];
+        if (v_failed) this.v_failed = new Set(v_failed);
         if (e_failed) this.e_failed = [...e_failed];
     }
 };
@@ -159,7 +162,7 @@ function create_frames(variant) {
             for (var i = 0; i < edges.length; i++) {
                 var sm = Math.min(values[edges[i][0]], values[edges[i][1]]);
                 var lg = Math.max(values[edges[i][0]], values[edges[i][1]]);
-                frames.push(new Frame([], [], [edges[i]], e_complete, values, e_failed));
+                frames.push(new Frame([], [], [edges[i]], e_complete, values, [], e_failed));
                 if (lg == sm) {
                     e_failed.push(edges[i]);
                 }
@@ -171,14 +174,58 @@ function create_frames(variant) {
                         }
                     }
                 };
-                frames.push(new Frame([], [], [edges[i]], e_complete, values, e_failed));
+                frames.push(new Frame([], [], [edges[i]], e_complete, values, [], e_failed));
             }
-            frames.push(new Frame([], [], [], e_complete, values, e_failed));
+            frames.push(new Frame([], [], [], e_complete, values, [], e_failed));
             break;
         }
-        case "2": // Dijkstra
-            //TODO
+        case "2": { // Dijkstra
+            let values = new Array(go.size).fill(Infinity);
+            let previous = new Array(go.size);
+            let v_complete = new Set();
+            let active = source;
+            let val_empty = false;
+            values[source] = 0;
+
+            while (!val_empty && values[sink] != -1) { //should use proper priority queue
+                val_empty = true;
+                active = 0;
+                for (i = 0; i < go.size; i++) {
+                    if (values[i] < values[active] && values[i] >= 0 && values[i] < Infinity) {
+                        active = i;
+                        val_empty = false;
+                    }
+                }
+                frames.push(new Frame([active], v_complete, [], [], values));
+                go.neighbours(active).forEach(function (u) {
+                    frames.push(new Frame([active], v_complete, [[active, u]], [], values));
+                    let val_new = values[active] + go.get_weight(active, u);
+                    if (val_new < values[u]) {
+                        values[u] = val_new;
+                        previous[u] = active;
+                        frames.push(new Frame([active], v_complete, [[active, u]], [], values));
+                    }
+                });
+                values[active] = -1;
+                v_complete.add(active);
+                frames.push(new Frame([], v_complete, [], [], values));
+            };
+
+            if (values[sink] != -1) {
+                frames.push(new Frame([], [], [], [], values, v_complete));
+            }
+            else {
+                v_complete = new Set();
+                active = sink;
+                while (active != source) {
+                    v_complete.add(active);
+                    active = previous[active];
+                }
+                v_complete.add(active);
+                frames.push(new Frame([], v_complete, [], [], values));
+            };
             break;
+        }
         case "3": // Ford-Fulkerson
             //TODO
             break;
