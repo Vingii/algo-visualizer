@@ -6,9 +6,9 @@ let init_values = [];
 let detailed = false;
 const bar_template = "<div class=\"shadow w-100 mx-auto bg-info text-center rounded\" style=\"height:~h~%\;min-height:25px\">~val~</div>";
 
-const name_common = "Sorting"
-const desc_common = "Given an unordered list, sort it by the value, ascending."
+const name_common = "Sorting";
 const variants = ["Select sort", "Insert sort", "Heap sort", "Merge sort", "Quick sort", "Radix sort"];
+const task = Array(variants.length).fill("Given an unordered list, sort it by the value of its elements, ascending.");
 const descriptions = [
     "Keeps ordered and unordered part. In each step, finds the least element of the unordered part.",
     "Keeps ordered and unordered part. In each step, finds a spot for the first element of the unordered part.",
@@ -24,7 +24,7 @@ const specs = [
     { "Average time": "O(nlog(n))", "Worst time": "O(nlog(n))", "Space": "O(n)", "Stable": "Yes", "Online": "No" },
     { "Average time": "O(nlog(n))", "Worst time": "O(n<sup>2</sup>)", "Space": "O(log(n))", "Stable": "No", "Online": "No" },
     { "Average time": "O(n+m)", "Worst time": "O(n+m)", "Space": "O(n+m)", "Stable": "Yes", "Online": "No", "Note": "m denotes maximal value in the list." }
-]
+];
 
 //controls
 
@@ -32,7 +32,7 @@ document.getElementById('vis-parameters').insertAdjacentHTML('beforeend', //fill
     '<label for="sizeRange" class="form-label mt-1">Size</label><input type="range" class="form-range" min="4" max="' + max + '" step="1" value="' + size + '" id="sizeRange">' +
     '<div class="form-check form-switch"><input class="form-check-input" type="checkbox" value="" id="detailedCheck" disabled><label class="form-check-label" for="detailedCheck">Detailed</label></div>');
 
-$('#vis-parameters').on('change', '#variants', function detailed(e) { //quick sort detailed
+$('#vis-parameters').on('change', '#variants', function detailed(e) { //detailed
     if (['2', '3', '4'].includes($('#variants').val())) {
         $('#detailedCheck').prop('disabled', false);
     }

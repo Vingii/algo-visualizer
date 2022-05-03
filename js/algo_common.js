@@ -116,6 +116,8 @@ load_simu();
 //description
 
 function change_desc() {
+    $('#task').empty();
+    document.getElementById('task').insertAdjacentHTML('beforeend', "<b>Task: </b>" + task[variant]);
     $('#desc').empty();
     document.getElementById('desc').insertAdjacentHTML('beforeend', "<b>Algorithm:</b> " + descriptions[variant]);
     $('#specs').empty();
@@ -126,4 +128,3 @@ function change_desc() {
 
 $('#name-common').empty();
 document.getElementById('name-common').insertAdjacentHTML('beforeend', "<b>" + name_common + "</b>");
-document.getElementById('desc-common').insertAdjacentHTML('beforeend', "<b>Task: </b>" + desc_common);
