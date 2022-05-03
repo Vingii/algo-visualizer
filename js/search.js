@@ -39,7 +39,7 @@ class Frame {
     constructor(active, complete) {
         this.active = new Set(active);
         this.complete = complete;
-    };
+    }
 };
 
 function create_frames(variant) {

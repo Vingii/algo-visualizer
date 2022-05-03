@@ -62,7 +62,7 @@ class Frame {
         this.active = new Set(active);
         this.sorted = new Set(sorted);
         if (additional) this.additional = [...additional];
-    };
+    }
 };
 
 function create_frames(variant) {

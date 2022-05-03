@@ -1,4 +1,6 @@
 let active = new Set();
+let g = new Graph(false);
+let go = new Graph(true);
 
 const name_common = "Graphs";
 const variants = ["Disjoint set union", "Kruskal", "Dijkstra",
@@ -30,25 +32,164 @@ document.getElementById('vis-parameters').insertAdjacentHTML('beforeend', //fill
     ''); //TODO
 
 //simulation
+
 class Graph {
-    //TODO
+    constructor(oriented) {
+        this.size = 0;
+        this.adj = []; //adjacency matrix
+        this.oriented = oriented;
+    }
+    add_vertex() {
+        this.adj.push(Array(this.size).fill(0));
+        this.size += 1;
+        for (var i = 0; i < this.size; i++) {
+            this.adj[i].push(0);
+        }
+    }
+    add_edge(u, v, weight) {
+        this.adj[u][v] = weight;
+        if (!oriented) this.adj[v][u] = weight;
+    }
+    remove_vertex(u) {
+        for (var i = 0; i < this.size; i++) {
+            this.adj[i].splice(u);
+        }
+        this.adj.splice(u);
+        this.size -= 1;
+    }
+    remove_edge(u, v) {
+        this.adj[u][v] = 0;
+        if (!oriented) this.adj[v][u] = 0;
+    }
+    get_weight(u, v) {
+        return this.adj[u][v];
+    }
+    neighbours(u) {
+        let nei = [];
+        for (var i = 0; i < this.size; i++) {
+            if (this.adj[u][i] != 0) {
+                nei.push(i);
+            }
+        }
+        return nei;
+    }
+    neighbours_ordered(u) {
+        return this.neighbours(u).sort(function(a,b){
+            this.adj[u,a]-this.adj[u,b];
+        });
+    }
+    edges() {
+        let edg = [];
+        if (oriented) {
+            for (var i = 0; i < this.size; i++) {
+                for (var j = 0; i < this.size; i++) {
+                    if (this.adj[i][j] != 0) {
+                        edg.push([i, j]);
+                    }
+                }
+            }
+        }
+        else {
+            for (var i = 0; i < this.size; i++) {
+                for (var j = i + 1; i < this.size; i++) {
+                    if (this.adj[i][j] != 0) {
+                        edg.push([i, j]);
+                    }
+                }
+            }
+        }
+        return edg;
+    }
+    edges_ordered() {
+        return this.edges().sort(function(a,b){
+            this.adj[a[0],a[1]]-this.adj[b[0],b[1]];
+        });
+    }
 }
 
 class Frame {
-    constructor() { //TODO
-        this.values = [...values];
-        this.active = new Set(active);
-        this.sorted = new Set(sorted);
-        if (additional) this.additional = [...additional];
-    };
+    constructor(v_active, v_complete, e_active, e_complete, v_values, e_failed) {
+        this.v_active = new Set(v_active);
+        this.v_complete = new Set(v_complete);
+        this.e_active = [...e_active];
+        this.e_complete = [...e_complete];
+        if (v_values) this.v_values = [...v_values];
+        if (e_failed) this.e_failed = [...e_failed];
+    }
 };
 
-function create_frames(variant) { //TODO
+function create_frames(variant) {
     let frames = [];
-    active = [];
 
     switch (variant) {
-        case "0":
+        case "0": { // Disjoint set union
+            let values = new Array(g.size);
+            let edges = g.edges();
+            let e_complete = [];
+
+            for (var i = 0; i < g.size; i++) {
+                values[i] = i;
+            };
+            frames.push(new Frame([], [], [], [], values));
+            for (var i = 0; i < edges.length; i++) {
+                var sm = Math.min(values[edges[i][0]], values[edges[i][1]]);
+                var lg = Math.max(values[edges[i][0]], values[edges[i][1]]);
+                frames.push(new Frame([], [], [edges[i]], e_complete, values));
+                for (var j = 0; j < edges.length; j++) {
+                    if (values[j] == lg) {
+                        values[j] = sm;
+                    }
+                }
+                frames.push(new Frame([], [], [edges[i]], e_complete, values));
+                e_complete.push(edges[i]);
+            }
+            frames.push(new Frame([], [], [], e_complete, values));
+            break;
+        }
+        case "1": { // Kruskal
+            let values = new Array(g.size);
+            let edges = g.edges_ordered();
+            let e_complete = [];
+            let e_failed = [];
+
+            for (var i = 0; i < g.size; i++) {
+                values[i] = i;
+            };
+            frames.push(new Frame([], [], [], [], values));
+            for (var i = 0; i < edges.length; i++) {
+                var sm = Math.min(values[edges[i][0]], values[edges[i][1]]);
+                var lg = Math.max(values[edges[i][0]], values[edges[i][1]]);
+                frames.push(new Frame([], [], [edges[i]], e_complete, values, e_failed));
+                if (lg == sm) {
+                    e_failed.push(edges[i]);
+                }
+                else {
+                    e_complete.push(edges[i]);
+                    for (var j = 0; j < edges.length; j++) {
+                        if (values[j] == lg) {
+                            values[j] = sm;
+                        }
+                    }
+                };
+                frames.push(new Frame([], [], [edges[i]], e_complete, values, e_failed));
+            }
+            frames.push(new Frame([], [], [], e_complete, values, e_failed));
+            break;
+        }
+        case "2": // Dijkstra
+            //TODO
+            break;
+        case "3": // Ford-Fulkerson
+            //TODO
+            break;
+        case "4": // Topsort
+            //TODO
+            break;
+        case "5": //Floyd-Wardshall
+            //TODO
+            break;
+        case "6": // Blossom
+            //TODO
             break;
     }
     return frames;
