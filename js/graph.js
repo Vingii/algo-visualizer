@@ -207,7 +207,7 @@ function create_frames(variant) {
             while (!val_empty && values[sink] != -1) { //should use proper priority queue
                 val_empty = true;
                 active = 0;
-                for (i = 0; i < go.size; i++) {
+                for (var i = 0; i < go.size; i++) {
                     if (values[i] < values[active] && values[i] >= 0 && values[i] < Infinity) {
                         active = i;
                         val_empty = false;
@@ -215,7 +215,7 @@ function create_frames(variant) {
                 }
                 frames.push(new Frame([active], v_complete, [], [], values));
                 let nei = go.neighbours(active);
-                for (i = 0; i < nei.length; i++) {
+                for (var i = 0; i < nei.length; i++) {
                     let v = nei[i];
                     frames.push(new Frame([active], v_complete, [[active, v]], [], values));
                     let val_new = values[active] + go.get_weight(active, v);
@@ -255,10 +255,10 @@ function create_frames(variant) {
                 let previous = new Array(go.size);
                 let previous_dir = new Array(go.size);
                 while (v_queue.length > 0) {
-                    let active = v_queue.shift()
+                    let active = v_queue.shift(); //should be a proper queue
                     let nei = go.neighbours(active);
                     let nei_inv = go.neighbours_inverse(active);
-                    for (i = 0; i < nei.length; i++) {
+                    for (var i = 0; i < nei.length; i++) {
                         let v = nei[i];
                         if (typeof previous[v] == 'undefined' && v != source && go.get_weight(active, v) > flow.table[active][v]) {
                             previous[v] = active;
@@ -301,12 +301,12 @@ function create_frames(variant) {
                         let prev = previous[v];
                         v_active.add(v);
                         if (previous_dir[prev]) {
-                            e_active.push([prev,v]);
+                            e_active.push([prev, v]);
                             flow.table[prev][v] += improvement;
                             flow.table[v][prev] -= improvement;
                         }
                         else {
-                            e_active.push([v,prev]);
+                            e_active.push([v, prev]);
                             flow.table[prev][v] -= improvement;
                             flow.table[v][prev] += improvement;
                         };
@@ -320,15 +320,63 @@ function create_frames(variant) {
             frames.push(new Frame([], [], [], [], [], [], [], structuredClone(flow)));
             break;
         };
-        case "4": // Topsort
+        case "4": { // Topsort
+            let values = new Array(go.size);
+            let e_unused = go.edges();
+            let e_used = [];
+            let sources = [];
+            let v_complete = new Set();
+            for (var i = 0; i < go.size; i++) {
+                if (go.neighbours_inverse(i).length = 0) {
+                    sources.push(i);
+                };
+            };
+            let cur = 0;
+            while (sources.length > 0) {
+                let active = sources.shift(); //should be a proper queue
+                let nei = go.neighbours(active);
+                frames.push(new Frame([active], v_complete, [], e_used, values));
+                values[active] = cur;
+                cur += 1;
+                frames.push(new Frame([active], v_complete, [], e_used, values));
+                for (var i = 0; i < nei.length; i++) {
+                    e_used.push([active, nei[i]]);
+                    frames.push(new Frame([active], v_complete, [], e_used, values));
+                    var j = 0;
+                    while (e_unused[j][0] != active || e_unused[j][1] != nei[i]) {
+                        j += 1;
+                    }
+                    e_unused.splice(j, 1);
+
+                    var became_source = true;
+                    for (var j = 0; j < e_unused; j++) {
+                        if (e_unused[j][1] == nei[i]) {
+                            became_source = false;
+                            break;
+                        }
+                    }
+                    if (became_source) {
+                        sources.push(nei[i]);
+                    }
+                };
+                v_complete.add(active);
+            }
+            if (e_unused.length > 0) {
+                frames.push(new Frame([], [], [], [], values, v_complete, e_used));
+            }
+            else {
+                frames.push(new Frame([], v_complete, [], e_used, values));
+            };
+            break;
+        };
+        case "5": { //Floyd-Wardshall
             //TODO
             break;
-        case "5": //Floyd-Wardshall
+        }
+        case "6": { // Blossom
             //TODO
             break;
-        case "6": // Blossom
-            //TODO
-            break;
+        }
     }
     return frames;
 };
