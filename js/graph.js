@@ -110,7 +110,7 @@ class Graph {
 }
 
 class Frame {
-    constructor(v_active, v_complete, e_active, e_complete, v_values, v_failed, e_failed) {
+    constructor(v_active, v_complete, e_active, e_complete, v_values, v_failed, e_failed, additional) {
         this.v_active = new Set(v_active);
         this.v_complete = new Set(v_complete);
         this.e_active = [...e_active];
@@ -118,8 +118,18 @@ class Frame {
         if (v_values) this.v_values = [...v_values];
         if (v_failed) this.v_failed = new Set(v_failed);
         if (e_failed) this.e_failed = [...e_failed];
+        if (additional) this.additional = additional;
     }
 };
+
+class Flow {
+    constructor(total, table) {
+        this.total = total;
+        this.table = [];
+        for (var i = 0; i < table.length; i++)
+            this.table[i] = table[i].slice();
+    };
+}
 
 function create_frames(variant) {
     let frames = [];
@@ -148,7 +158,7 @@ function create_frames(variant) {
             }
             frames.push(new Frame([], [], [], e_complete, values));
             break;
-        }
+        };
         case "1": { // Kruskal
             let values = new Array(g.size);
             let edges = g.edges_ordered();
@@ -178,7 +188,7 @@ function create_frames(variant) {
             }
             frames.push(new Frame([], [], [], e_complete, values, [], e_failed));
             break;
-        }
+        };
         case "2": { // Dijkstra
             let values = new Array(go.size).fill(Infinity);
             let previous = new Array(go.size);
@@ -197,15 +207,17 @@ function create_frames(variant) {
                     }
                 }
                 frames.push(new Frame([active], v_complete, [], [], values));
-                go.neighbours(active).forEach(function (u) {
-                    frames.push(new Frame([active], v_complete, [[active, u]], [], values));
-                    let val_new = values[active] + go.get_weight(active, u);
-                    if (val_new < values[u]) {
-                        values[u] = val_new;
-                        previous[u] = active;
-                        frames.push(new Frame([active], v_complete, [[active, u]], [], values));
-                    }
-                });
+                let nei = go.neighbours(active);
+                for (i = 0; i < nei.length; i++) {
+                    let v = nei[i];
+                    frames.push(new Frame([active], v_complete, [[active, v]], [], values));
+                    let val_new = values[active] + go.get_weight(active, v);
+                    if (val_new < values[v]) {
+                        values[v] = val_new;
+                        previous[v] = active;
+                        frames.push(new Frame([active], v_complete, [[active, v]], [], values));
+                    };
+                };
                 values[active] = -1;
                 v_complete.add(active);
                 frames.push(new Frame([], v_complete, [], [], values));
@@ -225,10 +237,82 @@ function create_frames(variant) {
                 frames.push(new Frame([], v_complete, [], [], values));
             };
             break;
-        }
-        case "3": // Ford-Fulkerson
-            //TODO
+        };
+        case "3": { // Ford-Fulkerson
+            let flow = new Flow(0, Array.from(Array(go.size), () => new Array(go.size).fill(0)));
+            let found_augment = true;
+            while (found_augment) {
+                frames.push(new Frame([], [], [], [], [], [], [], structuredClone(flow)));
+                //find augmenting path
+                let v_queue = [source];
+                let previous = new Array(go.size);
+                let previous_dir = new Array(go.size);
+                while (v_queue.length > 0) {
+                    let active = v_queue.shift()
+                    let nei = go.neighbours(active);
+                    let nei_inv = go.neighbours_inverse(active);
+                    for (i = 0; i < nei.length; i++) {
+                        let v = nei[i];
+                        if (typeof previous[v] == 'undefined' && v != source && go.get_weight(active, v) > flow.table[active][v]) {
+                            previous[v] = active;
+                            previous_dir[v] = true;
+                            v_queue.push(v);
+                            if (v == sink) break;
+                        };
+                    };
+                    for (i = 0; i < nei_inv.length; i++) {
+                        let v = nei[i];
+                        if (typeof previous[v] == 'undefined' && v != source && 0 < flow.table[v][active]) {
+                            previous[v] = active;
+                            previous_dir[v] = false;
+                            v_queue.push(v);
+                            if (v == sink) break;
+                        };
+                    };
+                };
+                //calculate flow
+                let e_active = [];
+                let v_active = new Set();
+                if (typeof previous[sink] == 'undefined') {
+                    found_augment = false;
+                }
+                else {
+                    found_augment = true;
+                    let improvement = Infinity;
+                    let v = sink;
+                    while (v != source) {
+                        let prev = previous[v];
+                        if (previous_dir[prev]) {
+                            improvement = Math.min(improvement, go.get_weight(prev, v) - flow.table[prev][v]);
+                        }
+                        else {
+                            improvement = Math.min(improvement, flow[v][prev]);
+                        };
+                    }
+                    v = sink;
+                    while (v != source) {
+                        let prev = previous[v];
+                        v_active.add(v);
+                        if (previous_dir[prev]) {
+                            e_active.push([prev,v]);
+                            flow.table[prev][v] += improvement;
+                            flow.table[v][prev] -= improvement;
+                        }
+                        else {
+                            e_active.push([v,prev]);
+                            flow.table[prev][v] -= improvement;
+                            flow.table[v][prev] += improvement;
+                        };
+                    }
+                    v_active.add(source);
+                    frames.push(new Frame(v_active, [], e_active, [], [], [], [], structuredClone(flow)));
+                    flow.total += improvement;
+                    frames.push(new Frame(v_active, [], e_active, [], [], [], [], structuredClone(flow)));
+                };
+            };
+            frames.push(new Frame([], [], [], [], [], [], [], structuredClone(flow)));
             break;
+        };
         case "4": // Topsort
             //TODO
             break;
