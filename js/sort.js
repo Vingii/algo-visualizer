@@ -285,6 +285,8 @@ function create_frames(variant) {
     return frames;
 };
 
+//visualization
+
 function render_frame(variant, frame) {
     switch (variant) {
         case "3": //merge

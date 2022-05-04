@@ -74,6 +74,8 @@ function create_frames(variant) {
     return frames;
 }
 
+//visualization
+
 function render_frame(variant, frame) {
     tindex = target - 1;
     if (frame) {

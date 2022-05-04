@@ -1,35 +1,48 @@
 let active = new Set();
 let source = 0;
 let sink = 0;
+let mode = 0; //0-vertex, 1-edge adding/removing
 
 const name_common = "Graphs";
 const variants = ["Disjoint set union", "Kruskal", "Dijkstra",
-    "Ford-Fulkerson", "Topological sort", "Floyd-Warshall", "Blossom"];
+    "Ford-Fulkerson", "Topological sort"];
 const task = ["Count the number of connected components.", "Find a minimum spanning tree (forest).", "Find a shortest path between two vertices.",
-    "Calculate a maximum flow.", "Decide if a graph is a forest.", "Calculate the minimal distance between every pair of vertices.", "Find a maximum matching."];
+    "Calculate a maximum flow.", "Decide if a graph is a forest."];
 const descriptions = [
     "Consider each vertex a disjoint set, then perform a disjoint-set union for each edge.",
     "Repeatedly try adding the lowest-weight edge while not creating loops.",
     "DFS with a priority queue based on shorted path from source.",
     "Start with zero flow. Increase the flow along augmenting paths until none is found.",
-    "Sort the vertices such that u<v implies that there is no path from v to u. Such order exists iff there is no directed cycle.",
-    "Recursively compute the shortest paths u -> v using only vertices from 1 to w.",
-    "Start with an empty matching. Repeatedly improve the matching along augmenting paths."
+    "Sort the vertices such that u<v implies that there is no path from v to u. Such order exists iff there is no directed cycle."
 ];
 const specs = [
     { "Worst time": "O(|E|log(|V|))", "Constraints": "Undirected." },
     { "Worst time": "O(|V|+|E|)", "Constraints": "Undirected." },
     { "Worst time": "O(|E|+|V|log(|V|))", "Constraints": "Non-negative weights.", "Note": "Can be modified for negative weights and O(|V||E|) time. (See Bellman-Ford.)" },
     { "Worst time": "O(|V||E|<sup>2</sup>)", "Constraints": "Integral weights." },
-    { "Worst time": "O(|V|+|E|)", "Constraints": "None." },
-    { "Worst time": "O(|V|<sup>3</sup>)", "Constraints": "No negative cycles. (Detects them.)", "Note": "Can be modified to extract the shortest paths." },
-    { "Worst time": "O(|V|<sup>2</sup>|E|)", "Constraints": "None." },
+    { "Worst time": "O(|V|+|E|)", "Constraints": "None." }
 ]
 
 //controls
 
-document.getElementById('vis-parameters').insertAdjacentHTML('beforeend', //fill parameters
-    ''); //TODO
+document.getElementById('vis-parameters').insertAdjacentHTML('beforeend',
+    '<label class="form-label mt-1">Graph edit mode</label><br>\
+<div class="form-check-inline">\
+ <input class="form-check-input" type="radio" name="modeRadio" id="modeRadio0" value="0" checked>\
+ <label class="form-check-label" for="flexRadioDefault1">\
+ Vertex\
+ </label>\
+</div>\
+<div class="form-check-inline">\
+ <input class="form-check-input" type="radio" name="modeRadio" id="modeRadio1" value="1">\
+ <label class="form-check-label" for="flexRadioDefault2">\
+ Edge\
+ </label>\
+</div>');
+
+$('#vis-parameters').on('input', '[name="modeRadio"]:checked', function (e) {
+    mode =$(e.target).val();
+});
 
 //simulation
 
@@ -369,21 +382,97 @@ function create_frames(variant) {
             };
             break;
         };
-        case "5": { //Floyd-Wardshall
-            //TODO
-            break;
-        }
-        case "6": { // Blossom
-            //TODO
-            break;
-        }
-    }
+    };
     return frames;
-};
-
-function render_frame(variant, frame) {
-    //TODO
 };
 
 let g = new Graph(false);
 let go = new Graph(true);
+
+//visualization
+
+class Canvas {
+    constructor(element, oriented) {
+        this.element = element;
+        this.oriented = oriented;
+        this.ctx = this.element.getContext('2d');
+        this.vertices = [];
+        this.edges = [];
+        this.active = -1; //first clicked vertex in edge mode
+        this.set_mode(mode);
+        //click listener
+        this.element.addEventListener('click', function (event) {
+            event = event || window.event;
+            switch (mode) {
+                case 0: {
+                    var clicked_vertex = false;
+                    for (var i = 0; i < this.vertices.length; i++) {
+                        if (this.ctx.isPointInPath(this.vertices[i], event.offsetX, event.offsetY)) {
+                            this.remove_vertex(i);
+                            clicked_vertex = true;
+                            break;
+                        }
+                    }
+                    if (!clicked_vertex) this.create_vertex(event.offsetX, event.offsetY);
+                    break;
+                };
+                case 1: {
+                    for (var i = 0; i < this.vertices.length; i++) {
+                        if (this.ctx.isPointInPath(this.vertices[i], event.offsetX, event.offsetY)) {
+                            this.set_mode(2, i);
+                            break;
+                        };
+                    };
+                    break;
+                };
+                case 2: {
+                    for (var i = 0; i < this.vertices.length; i++) {
+                        if (this.ctx.isPointInPath(this.vertices[i], event.offsetX, event.offsetY)) {
+                            this.create_remove_edge(this.active, i);
+                            this.set_mode(1)
+                            break;
+                        };
+                    };
+                    break;
+                };
+            };
+        }.bind(this));
+        //hover listener
+        this.element.addEventListener('mousemove', function (event) {
+            event = event || window.event;
+            for (var i = 0; i < this.vertices.length; i++) {
+                if (this.ctx.isPointInPath(this.vertices[i], event.offsetX, event.offsetY)) {
+                    this.element.style.cursor = 'pointer';
+                    return;
+                }
+            }
+            this.element.style.cursor = 'default';
+        }.bind(this));
+    }
+    create_vertex() {
+        //TODO
+    }
+    create_remove_edge() {
+        if (this.oriented) {
+            //TODO
+        }
+        else {
+            //TODO
+        }
+    }
+    remove_vertex() {
+        //TODO
+    }
+    set_mode() {
+        //TODO
+    }
+};
+
+document.getElementById('vis-panel').innerHTML = '<canvas id="vis-canvas"></canvas>';
+document.getElementById('vis-bot').innerHTML = '<canvas id="vis-canvas-oriented"></canvas>';
+const canvas = new Canvas(document.getElementById('vis-canvas'), false);
+const canvas_oriented = new Canvas(document.getElementById('vis-canvas-oriented'), true);
+
+function render_frame(variant, frame) {
+    //TODO
+};
