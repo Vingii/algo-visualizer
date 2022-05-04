@@ -1,6 +1,4 @@
 let active = new Set();
-let g = new Graph(false);
-let go = new Graph(true);
 let source = 0;
 let sink = 0;
 
@@ -50,7 +48,7 @@ class Graph {
     }
     add_edge(u, v, weight) {
         this.adj[u][v] = weight;
-        if (!oriented) this.adj[v][u] = weight;
+        if (!this.oriented) this.adj[v][u] = weight;
     }
     remove_vertex(u) {
         for (var i = 0; i < this.size; i++) {
@@ -61,7 +59,7 @@ class Graph {
     }
     remove_edge(u, v) {
         this.adj[u][v] = 0;
-        if (!oriented) this.adj[v][u] = 0;
+        if (!this.oriented) this.adj[v][u] = 0;
     }
     get_weight(u, v) {
         return this.adj[u][v];
@@ -80,9 +78,18 @@ class Graph {
             this.adj[u, a] - this.adj[u, b];
         });
     }
+    neighbours_inverse(u) {
+        let nei = [];
+        for (var i = 0; i < this.size; i++) {
+            if (this.adj[i][u] != 0) {
+                nei.push(i);
+            }
+        }
+        return nei;
+    }
     edges() {
         let edg = [];
-        if (oriented) {
+        if (this.oriented) {
             for (var i = 0; i < this.size; i++) {
                 for (var j = 0; i < this.size; i++) {
                     if (this.adj[i][j] != 0) {
@@ -329,3 +336,6 @@ function create_frames(variant) {
 function render_frame(variant, frame) {
     //TODO
 };
+
+let g = new Graph(false);
+let go = new Graph(true);
