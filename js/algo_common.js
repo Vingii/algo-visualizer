@@ -53,20 +53,31 @@ $('#variants').on('change', function change_variant(e) {
 
 //simulation
 
-function show_top(){
-    vis_top.removeAttribute("hidden");
+function show_top(show){
+    if (show){
+        vis_top.removeAttribute("hidden");
+    }
+    else{
+        vis_top.setAttribute("hidden","");
+    }
 };
 
-function hide_top(){
-    vis_top.setAttribute("hidden","");
+function show_mid(show){
+    if (show){
+        vis_panel.removeAttribute("hidden");
+    }
+    else{
+        vis_panel.setAttribute("hidden","");
+    }
 };
 
-function show_bot(){
-    vis_bot.removeAttribute("hidden");
-};
-
-function hide_bot(){
-    vis_bot.setAttribute("hidden","");
+function show_bot(show){
+    if (show){
+        vis_bot.removeAttribute("hidden");
+    }
+    else{
+        vis_bot.setAttribute("hidden","");
+    }
 };
 
 function load_simu() {

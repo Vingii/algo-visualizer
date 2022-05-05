@@ -290,7 +290,7 @@ function create_frames(variant) {
 function render_frame(variant, frame) {
     switch (variant) {
         case "3": //merge
-            if (detailed) show_bot();
+            if (detailed) show_bot(true);
             vis_panel.innerHTML = '';
             vis_bot.innerHTML = '';
             if (frame) {
@@ -315,7 +315,7 @@ function render_frame(variant, frame) {
             };
             break;
         case "5": //radix
-            show_bot();
+            show_bot(true);
             vis_panel.innerHTML = '';
             vis_bot.innerHTML = '';
             if (frame) {
@@ -343,7 +343,7 @@ function render_frame(variant, frame) {
             };
             break;
         default: //select, insert, heap, quick (~inplace)
-            hide_bot();
+            show_bot(false);
             vis_panel.innerHTML = '';
             if (frame) {
                 for (var i = 0; i < size; i++) {

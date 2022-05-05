@@ -1,12 +1,12 @@
 let active = new Set();
 let source = 0;
 let sink = 0;
-let mode = 0; //0-vertex, 1-edge adding/removing
+let weight = 1;
 
 const name_common = "Graphs";
 const variants = ["Disjoint set union", "Kruskal", "Dijkstra",
     "Ford-Fulkerson", "Topological sort"];
-const task = ["Count the number of connected components.", "Find a minimum spanning tree (forest).", "Find a shortest path between two vertices.",
+const task = ["Find the connected components.", "Find a minimum spanning tree (forest).", "Find a shortest path between two vertices.",
     "Calculate a maximum flow.", "Decide if a graph is a forest."];
 const descriptions = [
     "Consider each vertex a disjoint set, then perform a disjoint-set union for each edge.",
@@ -25,24 +25,58 @@ const specs = [
 
 //controls
 
+//radio
+
 document.getElementById('vis-parameters').insertAdjacentHTML('beforeend',
     '<label class="form-label mt-1">Graph edit mode</label><br>\
 <div class="form-check-inline">\
  <input class="form-check-input" type="radio" name="modeRadio" id="modeRadio0" value="0" checked>\
- <label class="form-check-label" for="flexRadioDefault1">\
+ <label class="form-check-label" for="modeRadio0">\
  Vertex\
  </label>\
 </div>\
 <div class="form-check-inline">\
  <input class="form-check-input" type="radio" name="modeRadio" id="modeRadio1" value="1">\
- <label class="form-check-label" for="flexRadioDefault2">\
+ <label class="form-check-label" for="modeRadio1">\
  Edge\
  </label>\
+ <div class="form-check-inline">\
+  <input class="form-check-input" type="radio" name="modeRadio" id="modeRadio2" value="2" disabled>\
+  <label class="form-check-label" for="modeRadio02">\
+  Edge Active\
+  </label>\
 </div>');
 
 $('#vis-parameters').on('input', '[name="modeRadio"]:checked', function (e) {
-    mode =$(e.target).val();
+    canvas_visible.set_mode(parseInt($(e.target).val()));
 });
+
+//weight input
+
+document.getElementById('vis-parameters').insertAdjacentHTML('beforeend',
+    '<div class="input-group mt-1">\
+    <label class="input-group-text">Weight</label>\
+    <button class="btn btn-danger" type="button" id="button-weight-down" onclick="weight_down()">-</button>\
+    <input type="text" class="form-control" value="1" id="weight-input" disabled>\
+    <button class="btn btn-success" type="button" id="button-weight-up" onclick="weight_up()">+</button>\
+</div>');
+
+function weight_up() {
+    let old = parseInt(document.getElementById('weight-input').getAttribute("value"));
+    document.getElementById('weight-input').setAttribute("value", old + 1);
+    weight += 1;
+};
+
+function weight_down() {
+    if (weight > 1) {
+        let old = parseInt(document.getElementById('weight-input').getAttribute("value"));
+        document.getElementById('weight-input').setAttribute("value", old - 1);
+        weight -= 1;
+    }
+    else {
+        $("#weight-input").effect("highlight", { color: "red" }, 500);
+    }
+};
 
 //simulation
 
@@ -65,9 +99,9 @@ class Graph {
     }
     remove_vertex(u) {
         for (var i = 0; i < this.size; i++) {
-            this.adj[i].splice(u);
+            this.adj[i].splice(u, 1);
         }
-        this.adj.splice(u);
+        this.adj.splice(u, 1);
         this.size -= 1;
     }
     remove_edge(u, v) {
@@ -130,15 +164,25 @@ class Graph {
 }
 
 class Frame {
-    constructor(v_active, v_complete, e_active, e_complete, v_values, v_failed, e_failed, additional) {
+    constructor(v_active, v_complete, e_active, e_complete, v_values, v_failed, e_failed, flow) {
         this.v_active = new Set(v_active);
         this.v_complete = new Set(v_complete);
         this.e_active = [...e_active];
         this.e_complete = [...e_complete];
         if (v_values) this.v_values = [...v_values];
-        if (v_failed) this.v_failed = new Set(v_failed);
-        if (e_failed) this.e_failed = [...e_failed];
-        if (additional) this.additional = additional;
+        if (v_failed) {
+            this.v_failed = new Set(v_failed)
+        }
+        else {
+            this.v_failed = new Set();
+        };
+        if (e_failed) {
+            this.e_failed = [...e_failed];
+        }
+        else {
+            this.e_failed = [];
+        };
+        if (flow) this.flow = flow;
     }
 };
 
@@ -153,6 +197,13 @@ class Flow {
 
 function create_frames(variant) {
     let frames = [];
+
+    if (['0', '1'].includes(variant)) {
+        show_oriented(false);
+    }
+    else {
+        show_oriented(true);
+    }
 
     switch (variant) {
         case "0": { // Disjoint set union
@@ -390,24 +441,40 @@ let g = new Graph(false);
 let go = new Graph(true);
 
 //visualization
+class Vertex {
+    constructor(path, x, y) {
+        this.path = path;
+        this.x = x;
+        this.y = y;
+    }
+}
 
+class Edge {
+    constructor(path, from, to, weight) {
+        this.path = path;
+        this.from = from;
+        this.to = to;
+        this.weight = weight;
+    }
+}
 class Canvas {
-    constructor(element, oriented) {
+    constructor(element, graph) {
         this.element = element;
-        this.oriented = oriented;
+        this.graph = graph;
         this.ctx = this.element.getContext('2d');
-        this.vertices = [];
+        this.vertices = []; //must be compatible with this.graph.vertices
         this.edges = [];
+        this.mode = 0; //0-vertex, 1-edge adding/removing, 2-mid edge addding
         this.active = -1; //first clicked vertex in edge mode
-        this.set_mode(mode);
+        this.vertex_radius = 20;
         //click listener
         this.element.addEventListener('click', function (event) {
             event = event || window.event;
-            switch (mode) {
+            switch (this.mode) {
                 case 0: {
                     var clicked_vertex = false;
                     for (var i = 0; i < this.vertices.length; i++) {
-                        if (this.ctx.isPointInPath(this.vertices[i], event.offsetX, event.offsetY)) {
+                        if (this.ctx.isPointInPath(this.vertices[i].path, event.offsetX, event.offsetY)) {
                             this.remove_vertex(i);
                             clicked_vertex = true;
                             break;
@@ -418,7 +485,7 @@ class Canvas {
                 };
                 case 1: {
                     for (var i = 0; i < this.vertices.length; i++) {
-                        if (this.ctx.isPointInPath(this.vertices[i], event.offsetX, event.offsetY)) {
+                        if (this.ctx.isPointInPath(this.vertices[i].path, event.offsetX, event.offsetY)) {
                             this.set_mode(2, i);
                             break;
                         };
@@ -427,9 +494,9 @@ class Canvas {
                 };
                 case 2: {
                     for (var i = 0; i < this.vertices.length; i++) {
-                        if (this.ctx.isPointInPath(this.vertices[i], event.offsetX, event.offsetY)) {
-                            this.create_remove_edge(this.active, i);
-                            this.set_mode(1)
+                        if (this.ctx.isPointInPath(this.vertices[i].path, event.offsetX, event.offsetY) && this.active != i) {
+                            this.create_remove_edge(this.active, i, weight);
+                            this.set_mode(1);
                             break;
                         };
                     };
@@ -441,7 +508,7 @@ class Canvas {
         this.element.addEventListener('mousemove', function (event) {
             event = event || window.event;
             for (var i = 0; i < this.vertices.length; i++) {
-                if (this.ctx.isPointInPath(this.vertices[i], event.offsetX, event.offsetY)) {
+                if (this.ctx.isPointInPath(this.vertices[i].path, event.offsetX, event.offsetY)) {
                     this.element.style.cursor = 'pointer';
                     return;
                 }
@@ -449,30 +516,246 @@ class Canvas {
             this.element.style.cursor = 'default';
         }.bind(this));
     }
-    create_vertex() {
-        //TODO
-    }
-    create_remove_edge() {
-        if (this.oriented) {
-            //TODO
+    has_edge(arr, edge) {
+        let edge_from = 0;
+        let edge_to = 0;
+        for (var i = 0; i < this.vertices.length; i++) {
+            if (edge.from == this.vertices[i]) {
+                edge_from = i;
+            }
+            if (edge.to == this.vertices[i]) {
+                edge_from = i;
+            }
         }
-        else {
-            //TODO
+        for (var i = 0; i < arr.length; i++) {
+            if ((arr[i][0] == edge_from && arr[i][1] == edge_to) || (arr[i][1] == edge_from && arr[i][0] == edge_to)) {
+                return true;
+            };
+        };
+        return false;
+    };
+    redraw(frame) {
+        this.ctx.clearRect(0, 0, this.element.width, this.element.height);
+        this.ctx.lineWidth = 8;
+        this.ctx.font = '36px serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        for (var i = 0; i < this.edges.length; i++) {
+            let edge = this.edges[i];
+            this.ctx.strokeStyle = "darkgray";
+            if (frame) {
+                if (this.has_edge(frame.e_active, edge)) {
+                    this.ctx.strokeStyle = "orange";
+                }
+                else if (this.has_edge(frame.e_complete, edge)) {
+                    this.ctx.strokeStyle = "green";
+                }
+                else if (this.has_edge(frame.e_failed, edge)) {
+                    this.ctx.strokeStyle = "red";
+                }
+                else {
+                    this.ctx.strokeStyle = "darkgray";
+                };
+            };
+            this.ctx.stroke(edge.path);
+            this.ctx.fillStyle = "black";
+            this.ctx.fillText(edge.weight, (edge.from.x + edge.to.x) / 2, (edge.from.y + edge.to.y) / 2);
+        };
+        if (frame && frame.flow) {
+            this.ctx.fillStyle = "darkred";
+            for (i = 0; i < frame.flow.table.length; i++) {
+                for (j = 0; j < frame.flow.table.length; j++) {
+                    if (this.graph.get_weight(i, j) != 0) {
+                        this.ctx.fillText(frame.flow.table[i, j], (0.5 * edge.from.x + 1.5 * edge.to.x) / 2, (0.5 * edge.from.y + 1.5 * edge.to.y) / 2);
+                    }
+                };
+            };
+        };
+        this.ctx.lineWidth = 5;
+        for (var i = 0; i < this.vertices.length; i++) {
+            this.ctx.strokeStyle = "black";
+            this.ctx.fillStyle = 'darkgray';
+            if (frame) {
+                if (frame.v_active.has(i)) {
+                    this.ctx.strokeStyle = "orange";
+                    this.ctx.fillStyle = 'gold';
+                }
+                else if (frame.v_complete.has(i)) {
+                    this.ctx.strokeStyle = "green";
+                    this.ctx.fillStyle = 'lightgreen';
+                }
+                else if (frame.v_failed.has(i)) {
+                    this.ctx.strokeStyle = "red";
+                    this.ctx.fillStyle = 'lightcoral';
+                }
+                else {
+                    this.ctx.strokeStyle = "black";
+                    this.ctx.fillStyle = 'darkgray';
+                };
+            };
+            this.ctx.stroke(this.vertices[i].path);
+            this.ctx.fill(this.vertices[i].path);
+            if (frame && frame.v_values) {
+                this.ctx.fillStyle = "black";
+                this.ctx.fillText(frame.v_values[i], this.vertices[i].x, this.vertices[i].y);
+            };
+        };
+    };
+    create_vertex(x, y) {
+        let safe = true;
+        for (var i = 0; i < this.vertices.length; i++) {
+            if ((this.vertices[i].x - x) ** 2 + (this.vertices[i].y - y) ** 2 < 4 * (this.vertex_radius + 5) ** 2) {
+                safe = false;
+            }
+        }
+        if (safe) {
+            let vertex = new Path2D();
+            vertex.arc(x, y, this.vertex_radius, 0, 2 * Math.PI);
+            this.vertices.push(new Vertex(vertex, x, y));
+            this.graph.add_vertex();
+            this.redraw();
+            load_simu();
         }
     }
-    remove_vertex() {
-        //TODO
+    create_remove_edge(u, v, weight) {
+        if (this.graph.get_weight(u, v) != 0) { //remove
+            if (this.graph.oriented) {
+                for (var i = 0; i < this.edges.length; i++) {
+                    if (this.edges[i].from == this.vertices[u] && this.edges[i].to == this.vertices[v]) {
+                        this.edges.splice(i, 1);
+                    };
+                };
+            }
+            else {
+                for (var i = 0; i < this.edges.length; i++) {
+                    if ((this.edges[i].from == this.vertices[u] && this.edges[i].to == this.vertices[v]) || (this.edges[i].from == this.vertices[v] && this.edges[i].to == this.vertices[u])) {
+                        this.edges.splice(i, 1);
+                    };
+                };
+            };
+            this.graph.remove_edge(u, v);
+        }
+        else if (weight != 0) { //add
+            let edge = new Path2D();
+            if (this.graph.oriented) {
+                if (this.graph.get_weight(v, u) != 0) return;
+                let dx = this.vertices[v].x - this.vertices[u].x;
+                let dy = this.vertices[v].y - this.vertices[u].y;
+                let angle = Math.atan2(dy, dx);
+                edge.moveTo(this.vertices[u].x, this.vertices[u].y);
+                edge.lineTo(this.vertices[v].x, this.vertices[v].y);
+                edge.moveTo((this.vertices[u].x + this.vertices[v].x) / 2, (this.vertices[u].y + this.vertices[v].y) / 2);
+                edge.lineTo((this.vertices[u].x + this.vertices[v].x) / 2 - 30 * Math.cos(angle - Math.PI / 6), (this.vertices[u].y + this.vertices[v].y) / 2 - 30 * Math.sin(angle - Math.PI / 6));
+                edge.moveTo((this.vertices[u].x + this.vertices[v].x) / 2, (this.vertices[u].y + this.vertices[v].y) / 2);
+                edge.lineTo((this.vertices[u].x + this.vertices[v].x) / 2 - 30 * Math.cos(angle + Math.PI / 6), (this.vertices[u].y + this.vertices[v].y) / 2 - 30 * Math.sin(angle + Math.PI / 6));
+            }
+            else {
+                edge.moveTo(this.vertices[u].x, this.vertices[u].y);
+                edge.lineTo(this.vertices[v].x, this.vertices[v].y);
+            };
+            this.edges.push(new Edge(edge, this.vertices[u], this.vertices[v], weight));
+            this.graph.add_edge(u, v, weight);
+        };
+        this.redraw();
+        load_simu();
     }
-    set_mode() {
-        //TODO
+    remove_vertex(u) {
+        var new_edges = [];
+        for (var i = 0; i < this.edges.length; i++) {
+            if (this.edges[i].from != this.vertices[u] && this.edges[i].to != this.vertices[u]) {
+                new_edges.push(this.edges[i]);
+            }
+        };
+        this.edges = new_edges;
+        this.vertices.splice(u, 1);
+        this.graph.remove_vertex(u);
+        this.redraw();
+        load_simu();
+    }
+    set_mode(new_mode, active) {
+        if (new_mode != this.mode) {
+            if (typeof active != "undefined" && active != -1) {
+                this.active = active;
+            }
+            else {
+                this.active = -1;
+            }
+            this.mode = new_mode;
+            this.set_description();
+        }
+        set_radio();
+    }
+    set_description() {
+        let text = '';
+        switch (this.mode) {
+            case 0:
+                text = 'Click to add/remove a vertex.';
+                break;
+            case 1:
+                text = 'Click to add/remove an edge.';
+                break;
+            case 2:
+                text = 'Select a second vertex.';
+                break;
+        };
+        document.getElementById('vis-top').innerText = text;
     }
 };
 
 document.getElementById('vis-panel').innerHTML = '<canvas id="vis-canvas"></canvas>';
 document.getElementById('vis-bot').innerHTML = '<canvas id="vis-canvas-oriented"></canvas>';
-const canvas = new Canvas(document.getElementById('vis-canvas'), false);
-const canvas_oriented = new Canvas(document.getElementById('vis-canvas-oriented'), true);
+document.getElementById('vis-top').removeAttribute("hidden");
+document.getElementById('vis-top').style = "";
+const canvas = new Canvas(document.getElementById('vis-canvas'), g);
+const canvas_oriented = new Canvas(document.getElementById('vis-canvas-oriented'), go);
+var canvas_visible = canvas;
+
+$(window).resize(function () {
+    fix_size();
+});
+
+function fix_size() {
+    canvas.element.width = document.getElementById('vis-panel').offsetWidth;
+    canvas.element.height = document.getElementById('vis-panel').offsetHeight;
+    canvas_oriented.element.width = document.getElementById('vis-bot').offsetWidth;
+    canvas_oriented.element.height = document.getElementById('vis-bot').offsetHeight;
+    canvas.redraw();
+    canvas_oriented.redraw();
+};
+
+function show_oriented(oriented) {
+    if (oriented) {
+        show_mid(false);
+        show_bot(true);
+        canvas_oriented.element.removeAttribute("hidden");
+        canvas.element.setAttribute("hidden", "");
+        canvas_oriented.set_description();
+        canvas_visible = canvas_oriented;
+        fix_size();
+    }
+    else {
+        show_mid(true);
+        show_bot(false);
+        canvas.element.removeAttribute("hidden");
+        canvas_oriented.element.setAttribute("hidden", "");
+        canvas.set_description();
+        canvas_visible = canvas;
+        fix_size();
+    }
+    set_radio();
+};
+
+function set_radio() {
+    document.getElementsByName("modeRadio").forEach(function (e) {
+        if (parseInt(e.getAttribute("value")) == canvas_visible.mode) {
+            e.checked = true;
+        }
+        else {
+            e.checked = false;
+        };
+    });
+};
 
 function render_frame(variant, frame) {
-    //TODO
+    canvas_visible.redraw(frame);
 };
