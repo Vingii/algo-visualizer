@@ -6,11 +6,11 @@ let active = new Set();
 let bars = [];
 const bar_template = "<div class=\"shadow w-100 mx-auto bg-info text-center rounded\" style=\"height:~h~%\;min-height:25px\">~val~</div>";
 
-const name_common = "Searching"
-const desc_common = "Given an ordered list, find an element of a given value."
+const name_common = "Searching";
 const variants = ["Linear search", "Binary search"];
+const task = ["Given an ordered list, find an element of a given value.", "Given an ordered list, find an element of a given value."];
 const descriptions = ["Checks every element in order against the target.", "Checks the middle element against the target. Halves the search space in each step."];
-const specs = [{ "Average time": "O(n)", "Worst time": "O(n)", "Space": "O(1)" }, { "Average time": "O(log(n))", "Worst time": "O(log(n))", "Space": "O(1)" }]
+const specs = [{ "Average time": "O(n)", "Worst time": "O(n)", "Space": "O(1)" }, { "Average time": "O(log(n))", "Worst time": "O(log(n))", "Space": "O(1)" }];
 
 //controls
 
@@ -39,7 +39,7 @@ class Frame {
     constructor(active, complete) {
         this.active = new Set(active);
         this.complete = complete;
-    };
+    }
 };
 
 function create_frames(variant) {
@@ -73,6 +73,8 @@ function create_frames(variant) {
     }
     return frames;
 }
+
+//visualization
 
 function render_frame(variant, frame) {
     tindex = target - 1;

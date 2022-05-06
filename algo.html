@@ -17,6 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
         crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="./css/algo.css">
 </head>
 
 <body>
@@ -27,7 +28,7 @@
         <div class="row flex-shrink-0" id="nav">
         </div>
         <div class="row flex-grow-1" id="row-main">
-            <div class="col-md-2 bg-light" id="control-panel">
+            <div class="col-lg-2 mb-3 bg-light" id="control-panel">
                 <label for="speedRange" class="form-label mt-1">Speed</label>
                 <input type="range" class="form-range" min="1" max="10" step="1" value="3" id="speedRange">
                 <button type="button" class="btn btn-primary mb-1" onclick="click_run()"
@@ -40,24 +41,24 @@
                     </select>
                 </div>
             </div>
-            <div class="row col-md-8 flex-grow-1 flex-column position-static" style="min-height: 50vh;">
-                <div class="flex-row h-25" id="vis-top" hidden>
+            <div class="row col-lg-8 flex-grow-1 flex-column position-static p-0" style="min-height: 75vh;">
+                <div class="flex-row" style="height: 25%" id="vis-top" hidden>
                     Visualization
                 </div>
-                <div class="d-flex flex-row flex-grow-1" id="vis-panel">
+                <div class="d-flex flex-row flex-grow-1" style="min-height: 25%;" id="vis-panel">
                     Visualization
                 </div>
-                <div class="flex-row" style="min-height: 25%; display:flex;" id="vis-bot" hidden>
+                <div class="d-flex flex-row flex-grow-1" style="min-height: 25%;" id="vis-bot" hidden>
                     Visualization
                 </div>
             </div>
-            <div class="col-md-2 bg-light fs-4 position-relative5" id="desc-panel"
-                style="overflow-y: scroll;min-height: 50vh;">
-                <div class='position-absolute'>
+            <div class="col-lg-2 bg-light fs-4 position-relative5" id="desc-panel"
+                style="overflow-y: auto;min-height: 50vh;">
+                <div class='me-3 position-absolute'>
                     <p class="text-center" id="name-common">
                         Description
                     </p>
-                    <p id="desc-common">
+                    <p id="task">
                     </p>
                     <hr>
                     <p id="desc">
@@ -75,11 +76,16 @@
         </script>
         <script src="./js/algo_list.js"></script>
         <script>
-            const algo = new URLSearchParams(window.location.search).get("algo");
             $.ajax({
-                url: "./js/" + algo + ".js",
+                url: "./common/navbar.html",
                 success: function (data) {
-                    $.getScript("./js/algo_common.js");
+                    const algo = new URLSearchParams(window.location.search).get("algo");
+                    $.ajax({
+                        url: "./js/" + algo + ".js",
+                        success: function (data) {
+                            $.getScript("./js/algo_common.js");
+                        }
+                    });
                 }
             });
         </script>
