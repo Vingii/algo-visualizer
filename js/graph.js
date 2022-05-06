@@ -1,6 +1,6 @@
 let active = new Set();
-let source = 0;
-let sink = 0;
+let source = undefined;
+let sink = undefined;
 let weight = 1;
 
 const name_common = "Graphs";
@@ -45,6 +45,16 @@ document.getElementById('vis-parameters').insertAdjacentHTML('beforeend',
   <label class="form-check-label" for="modeRadio02">\
   Edge Active\
   </label>\
+  <div class="form-check-inline">\
+   <input class="form-check-input" type="radio" name="modeRadio" id="modeRadio3" value="3" disabled>\
+   <label class="form-check-label" for="modeRadio03">\
+   Source Select\
+   </label>\
+   <div class="form-check-inline">\
+    <input class="form-check-input" type="radio" name="modeRadio" id="modeRadio4" value="4" disabled>\
+    <label class="form-check-label" for="modeRadio04">\
+    Sink Select\
+    </label>\
 </div>');
 
 $('#vis-parameters').on('input', '[name="modeRadio"]:checked', function (e) {
@@ -259,55 +269,65 @@ function create_frames(variant) {
             break;
         };
         case "2": { // Dijkstra
+            if (typeof source == "undefined" || typeof sink == "undefined") break;
             let values = new Array(go.size).fill(Infinity);
             let previous = new Array(go.size);
             let v_complete = new Set();
+            let e_complete = [];
             let active = source;
             let val_empty = false;
             values[source] = 0;
 
-            while (!val_empty && values[sink] != -1) { //should use proper priority queue
+            while (!val_empty && typeof values[sink] != "undefined") { //should use proper priority queue
                 val_empty = true;
                 active = 0;
                 for (var i = 0; i < go.size; i++) {
-                    if (values[i] < values[active] && values[i] >= 0 && values[i] < Infinity) {
+                    if ((values[i] < values[active] || val_empty) && typeof values[i] != "undefined" && values[i] < Infinity) {
                         active = i;
                         val_empty = false;
                     }
                 }
-                frames.push(new Frame([active], v_complete, [], [], values));
-                let nei = go.neighbours(active);
-                for (var i = 0; i < nei.length; i++) {
-                    let v = nei[i];
-                    frames.push(new Frame([active], v_complete, [[active, v]], [], values));
-                    let val_new = values[active] + go.get_weight(active, v);
-                    if (val_new < values[v]) {
-                        values[v] = val_new;
-                        previous[v] = active;
-                        frames.push(new Frame([active], v_complete, [[active, v]], [], values));
+                if (val_empty) break;
+                frames.push(new Frame([active], v_complete, [], e_complete, values));
+                if (active != sink) {
+                    let nei = go.neighbours(active);
+                    for (var i = 0; i < nei.length; i++) {
+                        let v = nei[i];
+                        frames.push(new Frame([active], v_complete, [[active, v]], e_complete, values));
+                        let val_new = values[active] + go.get_weight(active, v);
+                        if (val_new < values[v]) {
+                            values[v] = val_new;
+                            previous[v] = active;
+                            frames.push(new Frame([active, v], v_complete, [[active, v]], e_complete, values));
+                            e_complete.push([active, v])
+                        };
                     };
                 };
-                values[active] = -1;
+                values[active] = undefined;
                 v_complete.add(active);
-                frames.push(new Frame([], v_complete, [], [], values));
+                frames.push(new Frame([], v_complete, [], e_complete, values));
             };
 
-            if (values[sink] != -1) {
+            if (typeof values[sink] != "undefined") {
                 frames.push(new Frame([], [], [], [], values, v_complete));
             }
             else {
                 v_complete = new Set();
+                e_complete = [];
                 active = sink;
                 while (active != source) {
                     v_complete.add(active);
+                    frames.push(new Frame([], v_complete, [], e_complete, values));
+                    e_complete.push([previous[active], active]);
                     active = previous[active];
                 }
                 v_complete.add(active);
-                frames.push(new Frame([], v_complete, [], [], values));
+                frames.push(new Frame([], v_complete, [], e_complete, values));
             };
             break;
         };
         case "3": { // Ford-Fulkerson
+            if (typeof source == "undefined" || typeof sink == "undefined") break;
             let flow = new Flow(0, Array.from(Array(go.size), () => new Array(go.size).fill(0)));
             let found_augment = true;
             while (found_augment) {
@@ -330,7 +350,7 @@ function create_frames(variant) {
                         };
                     };
                     for (i = 0; i < nei_inv.length; i++) {
-                        let v = nei[i];
+                        let v = nei_inv[i];
                         if (typeof previous[v] == 'undefined' && v != source && 0 < flow.table[v][active]) {
                             previous[v] = active;
                             previous_dir[v] = false;
@@ -351,30 +371,30 @@ function create_frames(variant) {
                     let v = sink;
                     while (v != source) {
                         let prev = previous[v];
-                        if (previous_dir[prev]) {
+                        v_active.add(v);
+                        if (previous_dir[v]) {
+                            e_active.push([prev, v]);
                             improvement = Math.min(improvement, go.get_weight(prev, v) - flow.table[prev][v]);
                         }
                         else {
-                            improvement = Math.min(improvement, flow[v][prev]);
+                            e_active.push([v, prev]);
+                            improvement = Math.min(improvement, flow.table[v][prev]);
                         };
-                    }
+                        v = prev;
+                    };
+                    v_active.add(source);
+                    frames.push(new Frame(v_active, [], e_active, [], [], [], [], structuredClone(flow)));
                     v = sink;
                     while (v != source) {
                         let prev = previous[v];
-                        v_active.add(v);
-                        if (previous_dir[prev]) {
-                            e_active.push([prev, v]);
+                        if (previous_dir[v]) {
                             flow.table[prev][v] += improvement;
-                            flow.table[v][prev] -= improvement;
                         }
                         else {
-                            e_active.push([v, prev]);
-                            flow.table[prev][v] -= improvement;
-                            flow.table[v][prev] += improvement;
+                            flow.table[v][prev] -= improvement;
                         };
-                    }
-                    v_active.add(source);
-                    frames.push(new Frame(v_active, [], e_active, [], [], [], [], structuredClone(flow)));
+                        v = prev;
+                    };
                     flow.total += improvement;
                     frames.push(new Frame(v_active, [], e_active, [], [], [], [], structuredClone(flow)));
                 };
@@ -500,6 +520,28 @@ class Canvas {
                     };
                     break;
                 };
+                case 3: {
+                    for (var i = 0; i < this.vertices.length; i++) {
+                        if (this.ctx.isPointInPath(this.vertices[i].path, event.offsetX, event.offsetY)) {
+                            source = i;
+                            this.redraw();
+                            load_simu();
+                            break;
+                        };
+                    };
+                    break;
+                };
+                case 4: {
+                    for (var i = 0; i < this.vertices.length; i++) {
+                        if (this.ctx.isPointInPath(this.vertices[i].path, event.offsetX, event.offsetY)) {
+                            sink = i;
+                            this.redraw();
+                            load_simu();
+                            break;
+                        };
+                    };
+                    break;
+                };
             };
         }.bind(this));
         //hover listener
@@ -561,15 +603,14 @@ class Canvas {
         };
         if (frame && frame.flow) {
             this.ctx.fillStyle = "darkred";
-            for (i = 0; i < frame.flow.table.length; i++) {
-                for (j = 0; j < frame.flow.table.length; j++) {
+            for (var i = 0; i < frame.flow.table.length; i++) {
+                for (var j = 0; j < frame.flow.table.length; j++) {
                     if (this.graph.get_weight(i, j) != 0) {
-                        this.ctx.fillText(frame.flow.table[i, j], (0.5 * edge.from.x + 1.5 * edge.to.x) / 2, (0.5 * edge.from.y + 1.5 * edge.to.y) / 2);
+                        this.ctx.fillText(frame.flow.table[i][j], (0.5 * this.vertices[i].x + 1.5 * this.vertices[j].x) / 2, (0.5 * this.vertices[i].y + 1.5 * this.vertices[j].y) / 2);
                     }
                 };
             };
         };
-        this.ctx.lineWidth = 5;
         for (var i = 0; i < this.vertices.length; i++) {
             this.ctx.strokeStyle = "black";
             this.ctx.fillStyle = 'darkgray';
@@ -591,11 +632,18 @@ class Canvas {
                     this.ctx.fillStyle = 'darkgray';
                 };
             };
+            if (i == source) this.ctx.strokeStyle = "darkblue";
+            if (i == sink) this.ctx.strokeStyle = "dodgerblue";
             this.ctx.stroke(this.vertices[i].path);
             this.ctx.fill(this.vertices[i].path);
             if (frame && frame.v_values && typeof frame.v_values[i] != "undefined") {
                 this.ctx.fillStyle = "black";
-                this.ctx.fillText(frame.v_values[i], this.vertices[i].x, this.vertices[i].y);
+                if (frame.v_values[i] == Infinity) {
+                    this.ctx.fillText("∞", this.vertices[i].x, this.vertices[i].y);
+                }
+                else {
+                    this.ctx.fillText(frame.v_values[i], this.vertices[i].x, this.vertices[i].y);
+                }
             };
         };
     };
@@ -667,6 +715,18 @@ class Canvas {
         this.edges = new_edges;
         this.vertices.splice(u, 1);
         this.graph.remove_vertex(u);
+        if (this.graph.oriented) {
+            if (source == this.vertices.length) {
+                source -= 1;
+            }
+            if (sink == this.vertices.length) {
+                sink -= 1;
+            }
+            if (this.vertices.length == 0) {
+                sink = undefined;
+                source = undefined;
+            }
+        }
         this.redraw();
         load_simu();
     }
@@ -694,6 +754,12 @@ class Canvas {
                 break;
             case 2:
                 text = 'Select a second vertex.';
+                break;
+            case 3:
+                text = 'Select the source.';
+                break;
+            case 4:
+                text = 'Select the sink.';
                 break;
         };
         document.getElementById('vis-top').innerText = text;
@@ -730,6 +796,8 @@ function show_oriented(oriented) {
         canvas_oriented.set_description();
         canvas_visible = canvas_oriented;
         fix_size();
+        document.getElementById("modeRadio3").disabled = false;
+        document.getElementById("modeRadio4").disabled = false;
     }
     else {
         show_mid(true);
@@ -739,6 +807,8 @@ function show_oriented(oriented) {
         canvas.set_description();
         canvas_visible = canvas;
         fix_size();
+        document.getElementById("modeRadio3").disabled = true;
+        document.getElementById("modeRadio4").disabled = true;
     }
     set_radio();
 };
