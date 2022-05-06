@@ -6,4 +6,18 @@
  
 ## Features
  - Searching algorithms
+   - Linear
+   - Binary
  - Sorting algorithms
+   - Select
+   - Insert
+   - Heap
+   - Merge
+   - Quick
+   - Radix
+ - Graph algorithms
+   - Disjoint set union
+   - Kruskal
+   - Dijkstra
+   - Ford-Fulkerson
+   - Topological sort
