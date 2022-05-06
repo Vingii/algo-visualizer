@@ -13,7 +13,7 @@ const descriptions = [
     "Repeatedly try adding the lowest-weight edge while not creating loops.",
     "DFS with a priority queue based on shorted path from source.",
     "Start with zero flow. Increase the flow along augmenting paths until none is found.",
-    "Sort the vertices such that u<v implies that there is no path from v to u. Such order exists iff there is no directed cycle."
+    "Sort the vertices such that u&ltv implies that there is no path from v to u. Such order exists iff there is no directed cycle."
 ];
 const specs = [
     { "Worst time": "O(|E|log(|V|))", "Constraints": "Undirected." },
@@ -91,7 +91,7 @@ class Graph {
         this.size += 1;
         for (var i = 0; i < this.size; i++) {
             this.adj[i].push(0);
-        }
+        };
     }
     add_edge(u, v, weight) {
         this.adj[u][v] = weight;
@@ -100,7 +100,7 @@ class Graph {
     remove_vertex(u) {
         for (var i = 0; i < this.size; i++) {
             this.adj[i].splice(u, 1);
-        }
+        };
         this.adj.splice(u, 1);
         this.size -= 1;
     }
@@ -116,8 +116,8 @@ class Graph {
         for (var i = 0; i < this.size; i++) {
             if (this.adj[u][i] != 0) {
                 nei.push(i);
-            }
-        }
+            };
+        };
         return nei;
     }
     neighbours_ordered(u) {
@@ -130,35 +130,35 @@ class Graph {
         for (var i = 0; i < this.size; i++) {
             if (this.adj[i][u] != 0) {
                 nei.push(i);
-            }
-        }
+            };
+        };
         return nei;
     }
     edges() {
         let edg = [];
         if (this.oriented) {
             for (var i = 0; i < this.size; i++) {
-                for (var j = 0; i < this.size; i++) {
+                for (var j = 0; j < this.size; j++) {
                     if (this.adj[i][j] != 0) {
                         edg.push([i, j]);
-                    }
-                }
-            }
+                    };
+                };
+            };
         }
         else {
             for (var i = 0; i < this.size; i++) {
-                for (var j = i + 1; i < this.size; i++) {
+                for (var j = i + 1; j < this.size; j++) {
                     if (this.adj[i][j] != 0) {
                         edg.push([i, j]);
-                    }
-                }
-            }
-        }
+                    };
+                };
+            };
+        };
         return edg;
     }
     edges_ordered() {
-        return this.edges().sort(function (a, b) {
-            this.adj[a[0], a[1]] - this.adj[b[0], b[1]];
+        return this.edges().sort((a, b) => {
+            return this.adj[a[0]][a[1]] - this.adj[b[0]][b[1]];
         });
     }
 }
@@ -219,15 +219,14 @@ function create_frames(variant) {
                 var sm = Math.min(values[edges[i][0]], values[edges[i][1]]);
                 var lg = Math.max(values[edges[i][0]], values[edges[i][1]]);
                 frames.push(new Frame([], [], [edges[i]], e_complete, values));
-                for (var j = 0; j < edges.length; j++) {
+                for (var j = 0; j < g.size; j++) {
                     if (values[j] == lg) {
                         values[j] = sm;
                     }
                 }
-                frames.push(new Frame([], [], [edges[i]], e_complete, values));
                 e_complete.push(edges[i]);
+                frames.push(new Frame([], [], [], e_complete, values));
             }
-            frames.push(new Frame([], [], [], e_complete, values));
             break;
         };
         case "1": { // Kruskal
@@ -249,15 +248,14 @@ function create_frames(variant) {
                 }
                 else {
                     e_complete.push(edges[i]);
-                    for (var j = 0; j < edges.length; j++) {
+                    for (var j = 0; j < g.size; j++) {
                         if (values[j] == lg) {
                             values[j] = sm;
                         }
                     }
                 };
-                frames.push(new Frame([], [], [edges[i]], e_complete, values, [], e_failed));
+                frames.push(new Frame([], [], [], e_complete, values, [], e_failed));
             }
-            frames.push(new Frame([], [], [], e_complete, values, [], e_failed));
             break;
         };
         case "2": { // Dijkstra
@@ -391,7 +389,7 @@ function create_frames(variant) {
             let sources = [];
             let v_complete = new Set();
             for (var i = 0; i < go.size; i++) {
-                if (go.neighbours_inverse(i).length = 0) {
+                if (go.neighbours_inverse(i).length == 0) {
                     sources.push(i);
                 };
             };
@@ -413,7 +411,7 @@ function create_frames(variant) {
                     e_unused.splice(j, 1);
 
                     var became_source = true;
-                    for (var j = 0; j < e_unused; j++) {
+                    for (var j = 0; j < e_unused.length; j++) {
                         if (e_unused[j][1] == nei[i]) {
                             became_source = false;
                             break;
@@ -524,7 +522,7 @@ class Canvas {
                 edge_from = i;
             }
             if (edge.to == this.vertices[i]) {
-                edge_from = i;
+                edge_to = i;
             }
         }
         for (var i = 0; i < arr.length; i++) {
@@ -595,7 +593,7 @@ class Canvas {
             };
             this.ctx.stroke(this.vertices[i].path);
             this.ctx.fill(this.vertices[i].path);
-            if (frame && frame.v_values) {
+            if (frame && frame.v_values && typeof frame.v_values[i] != "undefined") {
                 this.ctx.fillStyle = "black";
                 this.ctx.fillText(frame.v_values[i], this.vertices[i].x, this.vertices[i].y);
             };
