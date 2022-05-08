@@ -1,3 +1,5 @@
+/* exported show_bot, show_mid, show_top, click_restart, click_step, click_run */
+
 //variables
 
 var running = false;
@@ -15,9 +17,9 @@ const vis_bot = document.getElementById('vis-bot');
 //speed slider
 $('#speedRange').slider().on('change', change_speed);
 
-function change_speed(e) {
+function change_speed() {
     interval = 3000 / $(this).val();
-};
+}
 
 //buttons
 function click_run() {
@@ -26,27 +28,27 @@ function click_run() {
     }
     else {
         start_simu();
-    };
-};
+    }
+}
 
 function click_step() {
     if (!running) {
         step();
-    };
-};
+    }
+}
 
 function click_restart() {
     load_simu();
-};
+}
 
 //variants
 for (var i = 0; i < variants.length; i++) {
     document.getElementById('variants').insertAdjacentHTML('beforeend', '<option value="' + i + '">' + variants[i] + '</option>');
-};
+}
 
 variant = $('#variants').val();
 
-$('#variants').on('change', function change_variant(e) {
+$('#variants').on('change', function change_variant() {
     variant = $('#variants').val();
     load_simu();
 });
@@ -60,7 +62,7 @@ function show_top(show){
     else{
         vis_top.setAttribute("hidden","");
     }
-};
+}
 
 function show_mid(show){
     if (show){
@@ -69,7 +71,7 @@ function show_mid(show){
     else{
         vis_panel.setAttribute("hidden","");
     }
-};
+}
 
 function show_bot(show){
     if (show){
@@ -78,7 +80,7 @@ function show_bot(show){
     else{
         vis_bot.setAttribute("hidden","");
     }
-};
+}
 
 function load_simu() {
     stop_simu();
@@ -87,7 +89,7 @@ function load_simu() {
     frames = [];
     frames = create_frames($('#variants').val());
     render_frame(variant);
-};
+}
 
 function start_simu() {
     running = true;
@@ -95,7 +97,7 @@ function start_simu() {
     if (!timer) {
         timer = setTimeout(step_routine, interval);
     }
-};
+}
 
 function stop_simu() {
     running = false;
@@ -119,8 +121,8 @@ function step() {
     else {
         stop_simu();
         $('#runButton').removeClass('btn-warning btn-primary').addClass('btn-success');
-    };
-};
+    }
+}
 
 load_simu();
 
@@ -135,7 +137,7 @@ function change_desc() {
     for (const [key, value] of Object.entries(specs[variant])) {
         document.getElementById('specs').insertAdjacentHTML('beforeend', "<b>" + key + ":</b> " + value + "<br>");
     }
-};
+}
 
 $('#name-common').empty();
 document.getElementById('name-common').insertAdjacentHTML('beforeend', "<b>" + name_common + "</b>");
