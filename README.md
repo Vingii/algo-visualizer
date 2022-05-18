@@ -4,6 +4,20 @@
  Bootstrap based visualizer for typical algorithms.
  Available on [GitHub Pages](https://vingii.github.io/algo-visualizer).
  
- Features
+## Features
  - Searching algorithms
+   - Linear
+   - Binary
  - Sorting algorithms
+   - Select
+   - Insert
+   - Heap
+   - Merge
+   - Quick
+   - Radix
+ - Graph algorithms
+   - Disjoint set union
+   - Kruskal
+   - Dijkstra
+   - Ford-Fulkerson
+   - Topological sort
