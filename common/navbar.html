@@ -19,8 +19,7 @@
     </div>
   </div>
 </nav>
-<script>
-  var url = "./js/algo_list.js";
-  $.getScript(url);
+<script type="module">
+  import {fillNav} from "../js/algo_list.js"
+  fillNav()
 </script>
-<script>fillNav()</script>

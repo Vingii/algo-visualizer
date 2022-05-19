@@ -1,4 +1,6 @@
-/* exported render_frame, create_frames, specs, descriptions, task, variants, name_common */
+import { init, load_simu } from "./algo_common.js"
+
+const vis_panel = document.getElementById('vis-panel');
 
 const min = 4;
 const max = 30;
@@ -48,16 +50,17 @@ function create_frames(variant) {
     let frames = [];
     let curr = 0;
     switch (variant) {
-        case "0":
+        case "0": {
             while (curr < target) {
                 curr += 1;
                 frames.push(new Frame([curr], false));
             }
             frames.push(new Frame([curr], true));
             break;
-        case "1":
-            low = 1;
-            high = size;
+        }
+        case "1": {
+            let low = 1;
+            let high = size;
             curr = Math.ceil((high + low) / 2);
             frames.push(new Frame([curr, low, high], false));
             while (curr != target) {
@@ -72,6 +75,7 @@ function create_frames(variant) {
             }
             frames.push(new Frame([curr, low, high], true));
             break;
+        }
     }
     return frames;
 }
@@ -79,7 +83,7 @@ function create_frames(variant) {
 //visualization
 
 function render_frame(variant, frame) {
-    tindex = target - 1;
+    let tindex = target - 1;
     if (frame) {
         active.forEach(function (bar) { bars[bar - 1].classList.remove('bg-danger', 'bg-warning'); bars[bar - 1].classList.add('bg-info'); });
         bars[tindex].classList.remove('bg-info');
@@ -103,3 +107,5 @@ function render_frame(variant, frame) {
         bars[tindex].classList.add('bg-danger');
     }
 }
+
+init(variants, name_common, create_frames, render_frame, task, descriptions, specs)

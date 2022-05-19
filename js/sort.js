@@ -1,4 +1,7 @@
-/* exported render_frame, create_frames, specs, descriptions, task, variants, name_common */
+import { show_bot, init, load_simu } from "./algo_common.js"
+
+const vis_panel = document.getElementById('vis-panel');
+const vis_bot = document.getElementById('vis-bot');
 
 const min = 4;
 const max = 30;
@@ -128,7 +131,7 @@ function create_frames(variant) {
                     else {
                         frames.push(new Frame(values, [j], [], additional));
                     }
-                };
+                }
                 j += 1;
             }
         }
@@ -137,7 +140,7 @@ function create_frames(variant) {
             if (detailed) frames.push(new Frame(values, [i], [], additional));
             i += 1;
         }
-        m = 0;
+        let m = 0;
         frames.push(new Frame(values, s_active, [], additional));
         for (var k = from; k < size && k < from + 2 * range; k++) {
             values[k] = additional[m];
@@ -225,9 +228,9 @@ function create_frames(variant) {
             frames.push(new Frame(values, [size - 1], Array.from(Array(size - 1).keys())));
             frames.push(new Frame(values, [], values));
             break;
-        };
+        }
         case "1": { //insert
-            for (var i = 0; i < size; i++) {
+            for (i = 0; i < size; i++) {
                 const sorted = new Set(Array(i + 1).keys());
                 let pos = i;
                 frames.push(new Frame(values, [pos], sorted));
@@ -243,10 +246,10 @@ function create_frames(variant) {
             }
             frames.push(new Frame(values, [], values));
             break;
-        };
+        }
         case "2": { //heap
             heapify();
-            for (var i = size - 1; i > 0; i--) {
+            for (i = size - 1; i > 0; i--) {
                 if (detailed) frames.push(new Frame(values, [0, i], s_sorted));
                 [values[i], values[0]] = [values[0], values[i]];
                 s_sorted.add(i);
@@ -255,20 +258,20 @@ function create_frames(variant) {
             }
             frames.push(new Frame(values, [], values));
             break;
-        };
+        }
         case "3": { //merge
             for (var w = 1; w < size; w = w * 2) {
-                for (var i = 0; i < size; i += w * 2) {
+                for (i = 0; i < size; i += w * 2) {
                     merge(i, w);
                 }
             }
             frames.push(new Frame(values, [], values));
             break;
-        };
+        }
         case "4": { //quick
             quick(0, size - 1);
             break;
-        };
+        }
         case "5": { //radix
             let additional = new Array(Math.ceil(size / 2)).fill(0);
             for (let i = 0; i < size; i++) {
@@ -288,8 +291,8 @@ function create_frames(variant) {
             }
             frames.push(new Frame(values, [], Array(size).keys(), additional));
             break;
-        };
-    };
+        }
+    }
     return frames;
 }
 
@@ -309,7 +312,7 @@ function render_frame(variant, frame) {
             vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, frame.values[i] + 1).replace(/~h~/g, (frame.values[i] + 1) / size * 95));
         }
         if ((variant == "3" || variant == "5") && frame.additional) {
-            for (var i = 0; i < frame.additional.length; i++) {
+            for (i = 0; i < frame.additional.length; i++) {
                 vis_bot.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, frame.additional[i] + 1).replace(/~h~/g, (frame.additional[i] + 1) / size * 95));
             }
         }
@@ -320,16 +323,18 @@ function render_frame(variant, frame) {
         active = new Set(frame.active);
     }
     else if (variant == "5") {
-        for (var i = 0; i < size; i++) {
+        for (i = 0; i < size; i++) {
             vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, init_values[i] + 1).replace(/~h~/g, (2 * init_values[i] + 1) / size * 95));
-        };
-        for (var i = 0; i < size / 2; i++) {
+        }
+        for (i = 0; i < size / 2; i++) {
             vis_bot.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, i + 1).replace(/~h~/g, 0));
         }
     }
     else {
-        for (var i = 0; i < size; i++) {
+        for (i = 0; i < size; i++) {
             vis_panel.insertAdjacentHTML("beforeend", bar_template.replace(/~val~/g, init_values[i] + 1).replace(/~h~/g, (init_values[i] + 1) / size * 95));
         }
     }
 }
+
+init(variants, name_common, create_frames, render_frame, task, descriptions, specs)

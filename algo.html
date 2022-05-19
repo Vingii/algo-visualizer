@@ -31,8 +31,7 @@
             <div class="col-lg-2 mb-3 bg-light" id="control-panel">
                 <label for="speedRange" class="form-label mt-1">Speed</label>
                 <input type="range" class="form-range" min="1" max="10" step="1" value="3" id="speedRange">
-                <button type="button" class="btn btn-primary mb-1" onclick="click_run()"
-                    id="runButton">Run/Pause</button>
+                <button type="button" class="btn btn-primary mb-1" onclick="click_run()" id="runButton">Run/Pause</button>
                 <button type="button" class="btn btn-primary mb-1" onclick="click_step()">Step</button>
                 <button type="button" class="btn btn-primary mb-1" onclick="click_restart()">Restart</button>
                 <hr>
@@ -69,26 +68,36 @@
                 </div>
             </div>
         </div>
-        <script>
-            $(function () {
-                $("#nav").load("./common/navbar.html");
-            });
-        </script>
-        <script src="./js/algo_list.js"></script>
-        <script>
-            $.ajax({
-                url: "./common/navbar.html",
-                success: function (data) {
-                    const algo = new URLSearchParams(window.location.search).get("algo");
-                    $.ajax({
-                        url: "./js/" + algo + ".js",
-                        success: function (data) {
-                            $.getScript("./js/algo_common.js");
-                        }
-                    });
-                }
-            });
-        </script>
+    </div>
+    <script>
+      $(function () {
+        $("#nav").load("./common/navbar.html");
+      });
+    </script>
+    <script type="module">
+        const algo = new URLSearchParams(window.location.search).get("algo");
+        const algo_url = "./js/" + algo + ".js";
+        import(algo_url);
+        import { click_restart, click_step, click_run } from "./js/algo_common.js"
+        window.click_restart = click_restart
+        window.click_step = click_step
+        window.click_run = click_run
+    </script>
+    <!-- <script>
+        $.ajax({
+            url: "./common/navbar.html",
+            success: function (data) {
+                $("#nav").html(data);
+                const algo = new URLSearchParams(window.location.search).get("algo");
+                $.ajax({
+                    url: "./js/" + algo + ".js",
+                    success: function (data) {
+                        $.getScript("./js/algo_common.js");
+                    }
+                });
+            }
+        });
+    </script> -->
 </body>
 
 </html>
