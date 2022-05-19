@@ -1,4 +1,5 @@
-let active = new Set();
+import { show_bot, show_mid, init, load_simu } from "./algo_common.js"
+
 let source = undefined;
 let sink = undefined;
 let weight = 1;
@@ -75,7 +76,7 @@ function weight_up() {
     let old = parseInt(document.getElementById('weight-input').getAttribute("value"));
     document.getElementById('weight-input').setAttribute("value", old + 1);
     weight += 1;
-};
+}
 
 function weight_down() {
     if (weight > 1) {
@@ -86,7 +87,7 @@ function weight_down() {
     else {
         $("#weight-input").effect("highlight", { color: "red" }, 500);
     }
-};
+}
 
 //simulation
 
@@ -101,7 +102,7 @@ class Graph {
         this.size += 1;
         for (var i = 0; i < this.size; i++) {
             this.adj[i].push(0);
-        };
+        }
     }
     add_edge(u, v, weight) {
         this.adj[u][v] = weight;
@@ -110,7 +111,7 @@ class Graph {
     remove_vertex(u) {
         for (var i = 0; i < this.size; i++) {
             this.adj[i].splice(u, 1);
-        };
+        }
         this.adj.splice(u, 1);
         this.size -= 1;
     }
@@ -126,8 +127,8 @@ class Graph {
         for (var i = 0; i < this.size; i++) {
             if (this.adj[u][i] != 0) {
                 nei.push(i);
-            };
-        };
+            }
+        }
         return nei;
     }
     neighbours_ordered(u) {
@@ -140,8 +141,8 @@ class Graph {
         for (var i = 0; i < this.size; i++) {
             if (this.adj[i][u] != 0) {
                 nei.push(i);
-            };
-        };
+            }
+        }
         return nei;
     }
     edges() {
@@ -151,19 +152,19 @@ class Graph {
                 for (var j = 0; j < this.size; j++) {
                     if (this.adj[i][j] != 0) {
                         edg.push([i, j]);
-                    };
-                };
-            };
+                    }
+                }
+            }
         }
         else {
-            for (var i = 0; i < this.size; i++) {
-                for (var j = i + 1; j < this.size; j++) {
+            for (i = 0; i < this.size; i++) {
+                for (j = i + 1; j < this.size; j++) {
                     if (this.adj[i][j] != 0) {
                         edg.push([i, j]);
-                    };
-                };
-            };
-        };
+                    }
+                }
+            }
+        }
         return edg;
     }
     edges_ordered() {
@@ -185,16 +186,16 @@ class Frame {
         }
         else {
             this.v_failed = new Set();
-        };
+        }
         if (e_failed) {
             this.e_failed = [...e_failed];
         }
         else {
             this.e_failed = [];
-        };
+        }
         if (flow) this.flow = flow;
     }
-};
+}
 
 class Flow {
     constructor(total, table) {
@@ -202,7 +203,7 @@ class Flow {
         this.table = [];
         for (var i = 0; i < table.length; i++)
             this.table[i] = table[i].slice();
-    };
+    }
 }
 
 function create_frames(variant) {
@@ -223,9 +224,9 @@ function create_frames(variant) {
 
             for (var i = 0; i < g.size; i++) {
                 values[i] = i;
-            };
+            }
             frames.push(new Frame([], [], [], [], values));
-            for (var i = 0; i < edges.length; i++) {
+            for (i = 0; i < edges.length; i++) {
                 var sm = Math.min(values[edges[i][0]], values[edges[i][1]]);
                 var lg = Math.max(values[edges[i][0]], values[edges[i][1]]);
                 frames.push(new Frame([], [], [edges[i]], e_complete, values));
@@ -238,36 +239,36 @@ function create_frames(variant) {
                 frames.push(new Frame([], [], [], e_complete, values));
             }
             break;
-        };
+        }
         case "1": { // Kruskal
             let values = new Array(g.size);
             let edges = g.edges_ordered();
             let e_complete = [];
             let e_failed = [];
 
-            for (var i = 0; i < g.size; i++) {
+            for (i = 0; i < g.size; i++) {
                 values[i] = i;
-            };
+            }
             frames.push(new Frame([], [], [], [], values));
-            for (var i = 0; i < edges.length; i++) {
-                var sm = Math.min(values[edges[i][0]], values[edges[i][1]]);
-                var lg = Math.max(values[edges[i][0]], values[edges[i][1]]);
+            for (i = 0; i < edges.length; i++) {
+                sm = Math.min(values[edges[i][0]], values[edges[i][1]]);
+                lg = Math.max(values[edges[i][0]], values[edges[i][1]]);
                 frames.push(new Frame([], [], [edges[i]], e_complete, values, [], e_failed));
                 if (lg == sm) {
                     e_failed.push(edges[i]);
                 }
                 else {
                     e_complete.push(edges[i]);
-                    for (var j = 0; j < g.size; j++) {
+                    for (j = 0; j < g.size; j++) {
                         if (values[j] == lg) {
                             values[j] = sm;
                         }
                     }
-                };
+                }
                 frames.push(new Frame([], [], [], e_complete, values, [], e_failed));
             }
             break;
-        };
+        }
         case "2": { // Dijkstra
             if (typeof source == "undefined" || typeof sink == "undefined") break;
             let values = new Array(go.size).fill(Infinity);
@@ -281,7 +282,7 @@ function create_frames(variant) {
             while (!val_empty && typeof values[sink] != "undefined") { //should use proper priority queue
                 val_empty = true;
                 active = 0;
-                for (var i = 0; i < go.size; i++) {
+                for (i = 0; i < go.size; i++) {
                     if ((values[i] < values[active] || val_empty) && typeof values[i] != "undefined" && values[i] < Infinity) {
                         active = i;
                         val_empty = false;
@@ -291,7 +292,7 @@ function create_frames(variant) {
                 frames.push(new Frame([active], v_complete, [], e_complete, values));
                 if (active != sink) {
                     let nei = go.neighbours(active);
-                    for (var i = 0; i < nei.length; i++) {
+                    for (i = 0; i < nei.length; i++) {
                         let v = nei[i];
                         frames.push(new Frame([active], v_complete, [[active, v]], e_complete, values));
                         let val_new = values[active] + go.get_weight(active, v);
@@ -300,13 +301,13 @@ function create_frames(variant) {
                             previous[v] = active;
                             frames.push(new Frame([active, v], v_complete, [[active, v]], e_complete, values));
                             e_complete.push([active, v])
-                        };
-                    };
-                };
+                        }
+                    }
+                }
                 values[active] = undefined;
                 v_complete.add(active);
                 frames.push(new Frame([], v_complete, [], e_complete, values));
-            };
+            }
 
             if (typeof values[sink] != "undefined") {
                 frames.push(new Frame([], [], [], [], values, v_complete));
@@ -323,9 +324,9 @@ function create_frames(variant) {
                 }
                 v_complete.add(active);
                 frames.push(new Frame([], v_complete, [], e_complete, values));
-            };
+            }
             break;
-        };
+        }
         case "3": { // Ford-Fulkerson
             if (typeof source == "undefined" || typeof sink == "undefined") break;
             let flow = new Flow(0, Array.from(Array(go.size), () => new Array(go.size).fill(0)));
@@ -340,15 +341,15 @@ function create_frames(variant) {
                     let active = v_queue.shift(); //should be a proper queue
                     let nei = go.neighbours(active);
                     let nei_inv = go.neighbours_inverse(active);
-                    for (var i = 0; i < nei.length; i++) {
+                    for (i = 0; i < nei.length; i++) {
                         let v = nei[i];
                         if (typeof previous[v] == 'undefined' && v != source && go.get_weight(active, v) > flow.table[active][v]) {
                             previous[v] = active;
                             previous_dir[v] = true;
                             v_queue.push(v);
                             if (v == sink) break;
-                        };
-                    };
+                        }
+                    }
                     for (i = 0; i < nei_inv.length; i++) {
                         let v = nei_inv[i];
                         if (typeof previous[v] == 'undefined' && v != source && 0 < flow.table[v][active]) {
@@ -356,9 +357,9 @@ function create_frames(variant) {
                             previous_dir[v] = false;
                             v_queue.push(v);
                             if (v == sink) break;
-                        };
-                    };
-                };
+                        }
+                    }
+                }
                 //calculate flow
                 let e_active = [];
                 let v_active = new Set();
@@ -379,9 +380,9 @@ function create_frames(variant) {
                         else {
                             e_active.push([v, prev]);
                             improvement = Math.min(improvement, flow.table[v][prev]);
-                        };
+                        }
                         v = prev;
-                    };
+                    }
                     v_active.add(source);
                     frames.push(new Frame(v_active, [], e_active, [], [], [], [], structuredClone(flow)));
                     v = sink;
@@ -392,27 +393,27 @@ function create_frames(variant) {
                         }
                         else {
                             flow.table[v][prev] -= improvement;
-                        };
+                        }
                         v = prev;
-                    };
+                    }
                     flow.total += improvement;
                     frames.push(new Frame(v_active, [], e_active, [], [], [], [], structuredClone(flow)));
-                };
-            };
+                }
+            }
             frames.push(new Frame([], [], [], [], [], [], [], structuredClone(flow)));
             break;
-        };
+        }
         case "4": { // Topsort
             let values = new Array(go.size);
             let e_unused = go.edges();
             let e_used = [];
             let sources = [];
             let v_complete = new Set();
-            for (var i = 0; i < go.size; i++) {
+            for (i = 0; i < go.size; i++) {
                 if (go.neighbours_inverse(i).length == 0) {
                     sources.push(i);
-                };
-            };
+                }
+            }
             let cur = 0;
             while (sources.length > 0) {
                 let active = sources.shift(); //should be a proper queue
@@ -421,17 +422,17 @@ function create_frames(variant) {
                 values[active] = cur;
                 cur += 1;
                 frames.push(new Frame([active], v_complete, [], e_used, values));
-                for (var i = 0; i < nei.length; i++) {
+                for (i = 0; i < nei.length; i++) {
                     e_used.push([active, nei[i]]);
                     frames.push(new Frame([active], v_complete, [], e_used, values));
-                    var j = 0;
+                    j = 0;
                     while (e_unused[j][0] != active || e_unused[j][1] != nei[i]) {
                         j += 1;
                     }
                     e_unused.splice(j, 1);
 
                     var became_source = true;
-                    for (var j = 0; j < e_unused.length; j++) {
+                    for (j = 0; j < e_unused.length; j++) {
                         if (e_unused[j][1] == nei[i]) {
                             became_source = false;
                             break;
@@ -440,7 +441,7 @@ function create_frames(variant) {
                     if (became_source) {
                         sources.push(nei[i]);
                     }
-                };
+                }
                 v_complete.add(active);
             }
             if (e_unused.length > 0) {
@@ -448,12 +449,12 @@ function create_frames(variant) {
             }
             else {
                 frames.push(new Frame([], v_complete, [], e_used, values));
-            };
+            }
             break;
-        };
-    };
+        }
+    }
     return frames;
-};
+}
 
 let g = new Graph(false);
 let go = new Graph(true);
@@ -500,49 +501,49 @@ class Canvas {
                     }
                     if (!clicked_vertex) this.create_vertex(event.offsetX, event.offsetY);
                     break;
-                };
+                }
                 case 1: {
-                    for (var i = 0; i < this.vertices.length; i++) {
+                    for (i = 0; i < this.vertices.length; i++) {
                         if (this.ctx.isPointInPath(this.vertices[i].path, event.offsetX, event.offsetY)) {
                             this.set_mode(2, i);
                             break;
-                        };
-                    };
+                        }
+                    }
                     break;
-                };
+                }
                 case 2: {
-                    for (var i = 0; i < this.vertices.length; i++) {
+                    for (i = 0; i < this.vertices.length; i++) {
                         if (this.ctx.isPointInPath(this.vertices[i].path, event.offsetX, event.offsetY) && this.active != i) {
                             this.create_remove_edge(this.active, i, weight);
                             this.set_mode(1);
                             break;
-                        };
-                    };
+                        }
+                    }
                     break;
-                };
+                }
                 case 3: {
-                    for (var i = 0; i < this.vertices.length; i++) {
+                    for (i = 0; i < this.vertices.length; i++) {
                         if (this.ctx.isPointInPath(this.vertices[i].path, event.offsetX, event.offsetY)) {
                             source = i;
                             this.redraw();
                             load_simu();
                             break;
-                        };
-                    };
+                        }
+                    }
                     break;
-                };
+                }
                 case 4: {
-                    for (var i = 0; i < this.vertices.length; i++) {
+                    for (i = 0; i < this.vertices.length; i++) {
                         if (this.ctx.isPointInPath(this.vertices[i].path, event.offsetX, event.offsetY)) {
                             sink = i;
                             this.redraw();
                             load_simu();
                             break;
-                        };
-                    };
+                        }
+                    }
                     break;
-                };
-            };
+                }
+            }
         }.bind(this));
         //hover listener
         this.element.addEventListener('mousemove', function (event) {
@@ -567,13 +568,13 @@ class Canvas {
                 edge_to = i;
             }
         }
-        for (var i = 0; i < arr.length; i++) {
+        for (i = 0; i < arr.length; i++) {
             if ((arr[i][0] == edge_from && arr[i][1] == edge_to) || (arr[i][1] == edge_from && arr[i][0] == edge_to)) {
                 return true;
-            };
-        };
+            }
+        }
         return false;
-    };
+    }
     redraw(frame) {
         this.ctx.clearRect(0, 0, this.element.width, this.element.height);
         this.ctx.lineWidth = 8;
@@ -595,23 +596,23 @@ class Canvas {
                 }
                 else {
                     this.ctx.strokeStyle = "darkgray";
-                };
-            };
+                }
+            }
             this.ctx.stroke(edge.path);
             this.ctx.fillStyle = "black";
             this.ctx.fillText(edge.weight, (edge.from.x + edge.to.x) / 2, (edge.from.y + edge.to.y) / 2);
-        };
+        }
         if (frame && frame.flow) {
             this.ctx.fillStyle = "darkred";
-            for (var i = 0; i < frame.flow.table.length; i++) {
+            for (i = 0; i < frame.flow.table.length; i++) {
                 for (var j = 0; j < frame.flow.table.length; j++) {
                     if (this.graph.get_weight(i, j) != 0) {
                         this.ctx.fillText(frame.flow.table[i][j], (0.5 * this.vertices[i].x + 1.5 * this.vertices[j].x) / 2, (0.5 * this.vertices[i].y + 1.5 * this.vertices[j].y) / 2);
                     }
-                };
-            };
-        };
-        for (var i = 0; i < this.vertices.length; i++) {
+                }
+            }
+        }
+        for (i = 0; i < this.vertices.length; i++) {
             this.ctx.strokeStyle = "black";
             this.ctx.fillStyle = 'darkgray';
             if (frame) {
@@ -630,8 +631,8 @@ class Canvas {
                 else {
                     this.ctx.strokeStyle = "black";
                     this.ctx.fillStyle = 'darkgray';
-                };
-            };
+                }
+            }
             if (i == source) this.ctx.strokeStyle = "darkblue";
             if (i == sink) this.ctx.strokeStyle = "dodgerblue";
             this.ctx.stroke(this.vertices[i].path);
@@ -644,9 +645,9 @@ class Canvas {
                 else {
                     this.ctx.fillText(frame.v_values[i], this.vertices[i].x, this.vertices[i].y);
                 }
-            };
-        };
-    };
+            }
+        }
+    }
     create_vertex(x, y) {
         let safe = true;
         for (var i = 0; i < this.vertices.length; i++) {
@@ -669,16 +670,16 @@ class Canvas {
                 for (var i = 0; i < this.edges.length; i++) {
                     if (this.edges[i].from == this.vertices[u] && this.edges[i].to == this.vertices[v]) {
                         this.edges.splice(i, 1);
-                    };
-                };
+                    }
+                }
             }
             else {
-                for (var i = 0; i < this.edges.length; i++) {
+                for (i = 0; i < this.edges.length; i++) {
                     if ((this.edges[i].from == this.vertices[u] && this.edges[i].to == this.vertices[v]) || (this.edges[i].from == this.vertices[v] && this.edges[i].to == this.vertices[u])) {
                         this.edges.splice(i, 1);
-                    };
-                };
-            };
+                    }
+                }
+            }
             this.graph.remove_edge(u, v);
         }
         else if (weight != 0) { //add
@@ -698,10 +699,10 @@ class Canvas {
             else {
                 edge.moveTo(this.vertices[u].x, this.vertices[u].y);
                 edge.lineTo(this.vertices[v].x, this.vertices[v].y);
-            };
+            }
             this.edges.push(new Edge(edge, this.vertices[u], this.vertices[v], weight));
             this.graph.add_edge(u, v, weight);
-        };
+        }
         this.redraw();
         load_simu();
     }
@@ -711,7 +712,7 @@ class Canvas {
             if (this.edges[i].from != this.vertices[u] && this.edges[i].to != this.vertices[u]) {
                 new_edges.push(this.edges[i]);
             }
-        };
+        }
         this.edges = new_edges;
         this.vertices.splice(u, 1);
         this.graph.remove_vertex(u);
@@ -761,10 +762,10 @@ class Canvas {
             case 4:
                 text = 'Select the sink.';
                 break;
-        };
+        }
         document.getElementById('vis-top').innerText = text;
     }
-};
+}
 
 document.getElementById('vis-panel').innerHTML = '<canvas id="vis-canvas"></canvas>';
 document.getElementById('vis-bot').innerHTML = '<canvas id="vis-canvas-oriented"></canvas>';
@@ -785,7 +786,7 @@ function fix_size() {
     canvas_oriented.element.height = document.getElementById('vis-bot').offsetHeight;
     canvas.redraw();
     canvas_oriented.redraw();
-};
+}
 
 function show_oriented(oriented) {
     if (oriented) {
@@ -811,7 +812,7 @@ function show_oriented(oriented) {
         document.getElementById("modeRadio4").disabled = true;
     }
     set_radio();
-};
+}
 
 function set_radio() {
     document.getElementsByName("modeRadio").forEach(function (e) {
@@ -820,10 +821,12 @@ function set_radio() {
         }
         else {
             e.checked = false;
-        };
+        }
     });
-};
+}
 
 function render_frame(variant, frame) {
     canvas_visible.redraw(frame);
-};
+}
+
+init(variants, name_common, create_frames, render_frame, task, descriptions, specs)

@@ -6,6 +6,11 @@ var currframe = -1;
 var timer = 0;
 var interval = 1000;
 var variant = 0;
+var render_frame = null;
+var create_frames = null;
+var task = null;
+var descriptions = [];
+var specs = [];
 const vis_top = document.getElementById('vis-top');
 const vis_panel = document.getElementById('vis-panel');
 const vis_bot = document.getElementById('vis-bot');
@@ -13,11 +18,6 @@ const vis_bot = document.getElementById('vis-bot');
 //controls
 
 //speed slider
-$('#speedRange').slider().on('change', change_speed);
-
-function change_speed(e) {
-    interval = 3000 / $(this).val();
-};
 
 //buttons
 function click_run() {
@@ -26,59 +26,47 @@ function click_run() {
     }
     else {
         start_simu();
-    };
-};
+    }
+}
 
 function click_step() {
     if (!running) {
         step();
-    };
-};
+    }
+}
 
 function click_restart() {
     load_simu();
-};
-
-//variants
-for (var i = 0; i < variants.length; i++) {
-    document.getElementById('variants').insertAdjacentHTML('beforeend', '<option value="' + i + '">' + variants[i] + '</option>');
-};
-
-variant = $('#variants').val();
-
-$('#variants').on('change', function change_variant(e) {
-    variant = $('#variants').val();
-    load_simu();
-});
+}
 
 //simulation
 
-function show_top(show){
-    if (show){
+function show_top(show) {
+    if (show) {
         vis_top.removeAttribute("hidden");
     }
-    else{
-        vis_top.setAttribute("hidden","");
+    else {
+        vis_top.setAttribute("hidden", "");
     }
-};
+}
 
-function show_mid(show){
-    if (show){
+function show_mid(show) {
+    if (show) {
         vis_panel.removeAttribute("hidden");
     }
-    else{
-        vis_panel.setAttribute("hidden","");
+    else {
+        vis_panel.setAttribute("hidden", "");
     }
-};
+}
 
-function show_bot(show){
-    if (show){
+function show_bot(show) {
+    if (show) {
         vis_bot.removeAttribute("hidden");
     }
-    else{
-        vis_bot.setAttribute("hidden","");
+    else {
+        vis_bot.setAttribute("hidden", "");
     }
-};
+}
 
 function load_simu() {
     stop_simu();
@@ -87,7 +75,7 @@ function load_simu() {
     frames = [];
     frames = create_frames($('#variants').val());
     render_frame(variant);
-};
+}
 
 function start_simu() {
     running = true;
@@ -95,7 +83,7 @@ function start_simu() {
     if (!timer) {
         timer = setTimeout(step_routine, interval);
     }
-};
+}
 
 function stop_simu() {
     running = false;
@@ -119,10 +107,9 @@ function step() {
     else {
         stop_simu();
         $('#runButton').removeClass('btn-warning btn-primary').addClass('btn-success');
-    };
-};
+    }
+}
 
-load_simu();
 
 //description
 
@@ -135,7 +122,32 @@ function change_desc() {
     for (const [key, value] of Object.entries(specs[variant])) {
         document.getElementById('specs').insertAdjacentHTML('beforeend', "<b>" + key + ":</b> " + value + "<br>");
     }
-};
+}
 
-$('#name-common').empty();
-document.getElementById('name-common').insertAdjacentHTML('beforeend', "<b>" + name_common + "</b>");
+function init(variants, name_common, create, render, task_in, descriptions_in, specs_in) {
+    create_frames = create
+    render_frame = render
+    task = task_in
+    descriptions = descriptions_in
+    specs = specs_in
+    $('#speedRange').slider().on('change', change_speed);
+    function change_speed() {
+        interval = 3000 / $(this).val();
+    }
+
+    for (var i = 0; i < variants.length; i++) {
+        document.getElementById('variants').insertAdjacentHTML('beforeend', '<option value="' + i + '">' + variants[i] + '</option>');
+    }
+    variant = $('#variants').val();
+    $('#variants').on('change', function change_variant() {
+        variant = $('#variants').val();
+        load_simu();
+    });
+
+    load_simu();
+
+    $('#name-common').empty();
+    document.getElementById('name-common').insertAdjacentHTML('beforeend', "<b>" + name_common + "</b>");
+}
+
+export { show_bot, show_mid, show_top, click_restart, click_step, click_run, init, load_simu }

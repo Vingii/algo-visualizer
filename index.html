@@ -32,8 +32,9 @@
       $("#nav").load("./common/navbar.html");
     });
   </script>
-  <script src="./js/algo_list.js"></script>
-  <script>makeCards()</script>
+  <script type="module">
+    import { makeCards } from "./js/algo_list.js"
+    makeCards()
   </script>
 </body>
 
